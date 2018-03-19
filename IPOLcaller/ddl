@@ -1,0 +1,293 @@
+{
+    "archive": {
+        "files": {
+            "input_0.png": "Query Image",
+            "input_1.png": "Target Image",
+            "input_2.png": "Extra Image",
+            "output_hori.png": "result_horizontal",
+            "output_vert.png": "results_vertical",
+            "output_hori_rich.png": "result_horizontal_rich",
+            "output_vert_rich.png": "results_vertical_rich",            
+            "covering.png": "covering",
+            "panorama.png": "panorama",
+            "stdout.txt": "Output_details",
+            "data_matches.csv": "matches.csv"
+        },
+        "params":[
+            "var"
+        ],
+        "info": {
+            "run_time": "run time",
+            "var": "var"
+        }
+    },
+    "build": {
+        "build1": {
+            "url": "http://dev.ipol.im/~rdguez-mariano/newIMAS_cpp.zip",
+            "construct": "cd IMAS && mkdir build && cd build && cmake .. && make -j16",
+            "move": "IMAS/build/main"
+        }
+    },
+    "general": {
+        "demo_title": "Fast Image Matching by Affine Simulation",
+        "xlink_article": "http://www.ipol.im/"
+    },
+    "inputs": [
+        {
+            "description": "Query",
+            "dtype": "3x8i",
+            "ext": ".png",
+            "max_pixels": "2000 * 2000",
+            "max_weight": "1024*1024*10",
+            "required": true,
+            "type": "image"
+        },
+        {
+            "description": "Target",
+            "dtype": "3x8i",
+            "ext": ".png",
+            "max_pixels": "2000 * 2000",
+            "max_weight": "1024*1024*10",
+            "required": true,
+            "type": "image"
+        },
+        {
+            "description": "Extra",
+            "dtype": "3x8i",
+            "ext": ".png",
+            "max_pixels": "2000 * 2000",
+            "max_weight": "1024*1024*10",
+            "required": false,
+            "type": "image"
+        }
+        
+    ],
+    "params": [
+        {
+            "label": "Resize input images before applying IMAS", 
+             "type": "label"
+        },
+        {
+            "id": "resize",
+            "label": "<center>Resize images to have areas of about 800*600</center>",
+            "type": "checkbox",
+            "default_value": true
+        },
+        {
+            "label": "Available coverings for fixed tilt tolerances:", 
+             "type": "label"
+        },
+        {
+            "label": "<table style=\"border-collapse: collapse; width: 100%;\"> <tr> <td style=\" border-right: 1px solid #dddddd; padding: 8px;\"><b>t</b></td> <td>1.4</td> <td>1.5</td> <td>1.6</td> <td>1.7</td> <td>1.8</td> <td>1.9</td> <td>2</td> </tr> <tr style=\" border-top: 1px solid #dddddd; padding: 8px;\"> <td style=\" border-right: 1px solid #dddddd; padding: 8px;\"><b>&#x3B8</b></td> <td>44.4<sup>&#8500</sup></td> <td>48.1<sup>&#8500</sup></td> <td>51.3<sup>&#8500</sup></td> <td>53.9<sup>&#8500</sup></td> <td>56.2<sup>&#8500</sup></td> <td>58.2<sup>&#8500</sup></td> <td>60<sup>&#8500</sup></td>  </tr> </table>", 
+             "type": "label"
+        },
+        {
+            "id": "optimal_affine_simu",
+            "label": "<center>Apply IMAS</br><i>Generate optical affine simulations</i></center>",
+            "type": "checkbox",
+            "default_value": true
+        },
+        {
+            "id": "default_tilt_tol",
+            "label": "<center>Tilt tolerance by default</br> <i>Varies with the selected matching method</i></center>",
+            "type": "checkbox",
+            "default_value": true,
+            "visible": "params.optimal_affine_simu=='1'"
+        },
+        {
+            "id": "radius",
+            "label": "<p align=\"right\">Tilt tolerance = </p>",
+            "type": "range",
+            "values": {
+                "default": 1.7,
+                "max": 2,
+                "min": 1.4,
+                "step": 0.1
+            },
+            "visible": "(params.default_tilt_tol=='0')&&(params.optimal_affine_simu=='1')"
+        },
+        {
+            "label": "<p align=\"center\">Descriptor generation</p>", 
+             "type": "label",
+             "visible": "(params.default_tilt_tol=='0')&&(params.optimal_affine_simu=='1')"
+        },        
+        {
+            "id": "desc_type",
+            "label": "<center>Descriptor</center>",
+            "type": "selection_radio",
+            "values": {
+                "SIFT": "1",
+                "Root-SIFT": "11",
+                "Half-SIFT": "21",
+                "Half-Root-SIFT": "22",
+                "SURF (as in <a href='http://www.ipol.im/pub/art/2015/69/'>Oyallon & Rabin 2015</a>)": "2"
+            },
+            "default_value": "11",
+            "vertical": true
+        },
+        {
+            "id": "eigen",
+            "label": "<center>Default Hessian eigenvalue ratio</br> <i> Controls keypoints lying on edges </i></center>",
+            "type": "checkbox",
+            "default_value": true,
+            "visible": "params.desc_type!='2'"
+        }, 
+        {
+            "id": "eigen_thres",
+            "label": " <p align=\"right\">Hessian Eigenvalue ratio &#8804  </p>",
+            "type": "range",
+            "values": {
+                "default": 10,
+                "max": 50,
+                "min": 1,
+                "step": 0.1
+            },
+            "visible": "(params.desc_type!='2')&&(params.eigen=='0')"
+        },
+        {
+            "id": "tensoreigen",
+            "label": "<center>Default structure tensor eigenvalue ratio</br> <i> Summarizes the distribution of the gradient  </i></center>",
+            "type": "checkbox",
+            "default_value": true,
+            "visible": "params.desc_type!='2'"
+        },         
+        {
+            "id": "tensor_thres",
+            "label": " <p align=\"right\">Tensor Eigenvalue ratio &#8804  </p>",
+            "type": "range",
+            "values": {
+                "default": 10,
+                "max": 50,
+                "min": 1,
+                "step": 0.1
+            },
+            "visible": "(params.desc_type!='2')&&(params.tensoreigen=='0')"
+        },
+                {
+            "id": "filter_radius",
+            "label": "<p align=\"right\"> (as in rho-hyper-descriptors) rho=</p>",
+            "type": "range",
+            "values": {
+                "default": 4,
+                "max": 10,
+                "min": 1,
+                "step": 1
+            }
+        },
+        {
+            "label": "<p align=\"center\">Matching process</p>", 
+             "type": "label"
+        },
+        {
+            "id": "acontrario",
+            "label": "<center>A-contrario Matching</br> <i>If it exist, the third image is used for the 2nd nearest neighbor </i></center>",
+            "type": "checkbox",
+            "default_value": false,
+            "visible": "params.desc_type!='2'"
+        },
+        {
+            "id": "default_matching_ratio",
+            "label": "<center>Nearest Neighbor Distance Ratio by default</br> <i>Varies with the selected matching method</i></center>",
+            "type": "checkbox",
+            "default_value": true
+        },
+        {
+            "id": "match_ratio",
+            "label": "<p align=\"right\">Ratio =</p>",
+            "type": "range",
+            "values": {
+                "default": 0.6,
+                "max": 0.95,
+                "min": 0.05,
+                "step": 0.05
+            },
+            "visible": "params.default_matching_ratio=='0'"
+        },
+                {
+            "label": "<p align=\"center\">Filters</p>", 
+             "type": "label"
+        },
+        {
+            "id": "apply_orsa",
+            "label": "<center>Apply ORSA Filter</br></center>",
+            "type": "checkbox",
+            "default_value": true
+        },
+        {
+            "id": "orsa",
+            "label": "<center>ORSA type </center>",
+            "type": "selection_radio",
+            "values": {
+                "Fundamental (as in <a href='http://www.ipol.im/pub/art/2016/147/'>Moisan, Moulon & Monasse 2012</a>)": "1",
+                "Homography (as in <a href='http://www.ipol.im/pub/art/2012/mmm-oh/'>Moisan, Moulon & Monasse 2016</a>)": "0"
+            },
+            "default_value": "0",
+            "vertical": true,
+            "visible": "params.apply_orsa=='1'"
+        },
+        {
+            "id": "default_orsa_precision",
+            "label": "<center>ORSA precision by default</br></center>",
+            "type": "checkbox",
+            "default_value": true,
+            "visible": "params.apply_orsa=='1'"
+        },
+        {
+            "id": "orsa_precision",
+            "label": " <p align=\"right\">ORSA precision &#8804  </p>",
+            "type": "range",
+            "values": {
+                "default": 10,
+                "max": 100,
+                "min": 0,
+                "step": 1
+            },
+            "visible": "(params.apply_orsa=='1')&&(params.default_orsa_precision=='0')"
+        }
+    ],
+    "results": [
+        {
+            "contents": {
+            "Horizontal": {"img": "output_hori.png"},
+            "Horizontal_rich": {"img": "output_hori_rich.png"}
+            },
+            "type": "gallery"
+        },
+        {
+            "contents": {
+            "Vertical": {"img": "output_vert.png"},
+            "Vertical_rich": {"img": "output_vert_rich.png"}
+            },
+            "type": "gallery",
+            "visible": "'0'=='1'"
+        },        
+       {
+            "contents": {
+            "Query on Target": {"img": "panorama.png"}
+            },
+            "type": "gallery",
+            "visible": "(params.apply_orsa=='1')&&(params.orsa=='0')"
+        },
+       {
+            "contents": {
+            "Applied covering": {"img": "covering.png"}
+            },
+            "type": "gallery",
+            "zoom": "0.7"
+        },        
+        {
+            "contents": {
+                "matches.csv": "data_matches.csv"
+            }, 
+            "label": "<b>Matches:</b>", 
+            "type": "file_download"
+        },
+        {
+            "contents": "stdout.txt", 
+            "label": "<br/><b>Program Output:</b><br/>", 
+            "style": "''", 
+            "type": "text_file"
+        }
+    ],
+    "run": "${demoextras}/main_caller.sh input_0.png input_1.png $apply_orsa $orsa $desc_type $optimal_affine_simu $default_tilt_tol $radius $acontrario $default_matching_ratio $match_ratio $default_orsa_precision $orsa_precision False $eigen $eigen_thres $tensoreigen $tensor_thres $filter_radius $resize"
+}
