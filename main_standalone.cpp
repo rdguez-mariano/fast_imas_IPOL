@@ -570,7 +570,7 @@ int main(int argc, char **argv)
         cout<<"-im1 PATH/im1.png -im2 PATH/im2.png -applyfilter 2 -desc 11"<<endl;
     }
 
-    if (h1*h2*w1*w2==0)
+    if ((int)h1*h2*w1*w2==0)
     {
         cout<<"Wrong input images !"<<endl;
         return 0;
@@ -581,7 +581,8 @@ int main(int argc, char **argv)
     {
         areazoom_image(ipixels1,w1,h1,800*600);
         areazoom_image(ipixels2,w2,h2,800*600);
-        areazoom_image(ipixels3,w3,h3,800*600);
+        if (((int)w3>0)&&((int)h3>0))
+            areazoom_image(ipixels3,w3,h3,800*600);
     }
 
     string algo_name = SetDetectorDescriptor(IMAS_INDEX);
