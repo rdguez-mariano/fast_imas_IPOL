@@ -7,24 +7,7 @@
 #filepath=$(pwd)
 #parentname="$(basename "$(dirname "$filepath")")"
 #path="../../../../ipol_demo/modules/demorunner/binaries/$parentname/bin"
-toexec="${bin}main -im1 $1 -im2 $2 -desc $5"
-
-#all filters by default
-filter=0
-
-#$apply_orsa
-if [ "$3" = "True" ] 2>/dev/null; then
-	if [ "$4" = "0" ] 2>/dev/null; then
-		filter=2
-	fi
-	if [ "$4" = "1" ] 2>/dev/null; then
-		filter=1
-	fi
-fi
-
-toexec="$toexec -applyfilter $filter"
-
-
+toexec="${bin}main -im1 $1 -im2 $2 -desc $5 -applyfilter $4"
 
 #$optimal_affine_simu
 if [ "$6" = "True" ] 2>/dev/null; then
@@ -52,7 +35,7 @@ fi
 
 #$default_orsa_precision $orsa_precision
 if [ "${12}" = "False" ] 2>/dev/null; then
-	toexec="$toexec -orsa_precision ${13}"
+	toexec="$toexec -filter_precision ${13}"
 fi
 
 #eigen $eigen_thresh

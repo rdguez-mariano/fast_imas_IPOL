@@ -43,13 +43,13 @@ using namespace std;
 /**
  * @brief The minimum number of matches for ORSA (depending on the type: Homography or Fundamental) to be applied.
  */
-int ORSA_num_min = 5;
+int Filter_num_min = 5;
 
 /**
  * @brief The precision in pixels in which ORSA is to find the underlying meaningful transformation.
  * The meaning of this precision changes with ORSA Fundamental or ORSA Homography
  */
-double ORSA_precision=24;
+double Filter_precision=24;
 
 /**
  * @brief IdentifiedMaps Stores meaningful transformations identified by ORSA
@@ -876,7 +876,7 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
     tstart = IMAS::IMAS_getTickCount();
 
     // If (enough matches to do epipolar filtering)
-    if ( ( (int) matchings.size() >= ORSA_num_min ) )
+    if ( ( (int) matchings.size() >= Filter_num_min ) )
     {
         my_Printf("Filters... \n");
         float nfa_max = -2;
@@ -889,7 +889,7 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
             my_Printf("-> Applying ORSA filter (Fundamental Matrix) \n");
 
             // Fundamental matrix Estimation with ORSA
-            ORSA_EpipolarFilter( matchings, w1, h1, w2, h2, nfa_max, ITER_ORSA, ORSA_precision, verb);
+            ORSA_EpipolarFilter( matchings, w1, h1, w2, h2, nfa_max, ITER_ORSA, Filter_precision, verb);
         }
 
         if (applyfilter==ORSA_HOMOGRAPHY)
@@ -898,7 +898,7 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
             my_Printf("-> Applying ORSA filter (Homography) \n");
 
             // Homography Estimation with ORSA
-            ORSA_HomographyFilter( matchings, w1, h1, w2, h2, nfa_max, ITER_ORSA, ORSA_precision, verb);
+            ORSA_HomographyFilter( matchings, w1, h1, w2, h2, nfa_max, ITER_ORSA, Filter_precision, verb);
         }
 
         if (applyfilter==USAC_HOMOGRAPHY || applyfilter==USAC_FUNDAMENTAL )
@@ -909,10 +909,10 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
             else
                 my_Printf("-> Applying USAC filter (Fundamental) \n");
 
-            cout<<"Imposed precision <= "<< ORSA_precision<<endl;
+            cout<<"Imposed precision <= "<< Filter_precision<<endl;
 
             // Estimation with USAC
-            USAC_Filter( matchings,ORSA_precision, applyfilter==USAC_FUNDAMENTAL,  verb);
+            USAC_Filter( matchings,Filter_precision, applyfilter==USAC_FUNDAMENTAL,  verb);
         }
 
 
@@ -922,7 +922,7 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
     }
     else
     {
-        if (( (int) matchings.size() < ORSA_num_min ) )
+        if (( (int) matchings.size() < Filter_num_min ) )
             my_Printf("Not enough matches to extract the underlying meaningful transformation\n");
         matchings.clear();
     }

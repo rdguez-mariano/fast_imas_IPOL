@@ -111,7 +111,7 @@ set(IMAS_srcs_standalone_withUSAC
 
 
 # ACTIVATE USAC - needs libconfig and lapack
-set(USAC OFF)
+set(USAC ON)
 
 message("************* Fast IMAS *************")
 ADD_SUBDIRECTORY(io_png)

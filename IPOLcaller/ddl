@@ -23,14 +23,18 @@
     },
     "build": {
         "build1": {
-            "url": "http://dev.ipol.im/~rdguez-mariano/newIMAS_cpp.zip",
-            "construct": "cd IMAS && mkdir build && cd build && cmake .. && make -j16",
-            "move": "IMAS/build/main"
+            "url": "http://dev.ipol.im/~rdguez-mariano/fast_imas_IPOL-master.zip",
+            "construct": "cd fast_imas_IPOL-master && mkdir build && cd build && cmake .. && make -j16",
+            "move": "fast_imas_IPOL-master/build/main"
         }
     },
     "general": {
         "demo_title": "Fast Image Matching by Affine Simulation",
-        "xlink_article": "http://www.ipol.im/"
+        "input_description": "",
+        "param_description": "",
+        "xlink_article": "http://www.ipol.im/",
+        "requirements":"DEBIAN_STABLE",
+        "timeout": 200
     },
     "inputs": [
         {
@@ -116,11 +120,11 @@
             "label": "<center>Descriptor</center>",
             "type": "selection_radio",
             "values": {
-                "SIFT": "1",
-                "Root-SIFT": "11",
-                "Half-SIFT": "21",
-                "Half-Root-SIFT": "22",
-                "SURF (as in <a href='http://www.ipol.im/pub/art/2015/69/'>Oyallon & Rabin 2015</a>)": "2"
+                "SIFT</br>": "1",
+                "Root-SIFT</br>": "11",
+                "Half-SIFT</br>": "21",
+                "Half-Root-SIFT</br>": "22",
+                "SURF (as in <a href='http://www.ipol.im/pub/art/2015/69/'>Oyallon & Rabin 2015</a>)</br>": "2"
             },
             "default_value": "11",
             "vertical": true
@@ -187,7 +191,7 @@
         },
         {
             "id": "default_matching_ratio",
-            "label": "<center>Nearest Neighbor Distance Ratio by default</br> <i>Varies with the selected matching method</i></center>",
+            "label": "<center>Nearest Neighbour Distance Ratio by default</br> <i>Varies with the selected matching method</i></center>",
             "type": "checkbox",
             "default_value": true
         },
@@ -208,33 +212,28 @@
              "type": "label"
         },
         {
-            "id": "apply_orsa",
-            "label": "<center>Apply ORSA Filter</br></center>",
+            "id": "orsa",
+            "label": "<center>Apply filter </center>",
+            "type": "selection_radio",
+            "values": {
+                "None</br>":"0",
+                "ORSA Fundamental (as in <a href='http://www.ipol.im/pub/art/2016/147/'>Moisan, Moulon & Monasse 2012</a>)</br>": "1",
+                "ORSA Homography (as in <a href='http://www.ipol.im/pub/art/2012/mmm-oh/'>Moisan, Moulon & Monasse 2016</a>)</br>": "2",
+                "USAC Fundamental (as in <a href='http://www.cs.unc.edu/~rraguram/usac/'>Raguram, Chum, Pollefeys, Matas and Frahm 2013</a>)</br>": "3",
+                "USAC Homography (as in <a href='http://www.cs.unc.edu/~rraguram/usac/'>Raguram, Chum, Pollefeys, Matas and Frahm 2013</a>)</br>": "4"
+            },
+            "default_value": "4",
+            "vertical": true
+        },
+        {
+            "id": "default_orsa_precision",
+            "label": "<center>Filter precision by default</br></center>",
             "type": "checkbox",
             "default_value": true
         },
         {
-            "id": "orsa",
-            "label": "<center>ORSA type </center>",
-            "type": "selection_radio",
-            "values": {
-                "Fundamental (as in <a href='http://www.ipol.im/pub/art/2016/147/'>Moisan, Moulon & Monasse 2012</a>)": "1",
-                "Homography (as in <a href='http://www.ipol.im/pub/art/2012/mmm-oh/'>Moisan, Moulon & Monasse 2016</a>)": "0"
-            },
-            "default_value": "0",
-            "vertical": true,
-            "visible": "params.apply_orsa=='1'"
-        },
-        {
-            "id": "default_orsa_precision",
-            "label": "<center>ORSA precision by default</br></center>",
-            "type": "checkbox",
-            "default_value": true,
-            "visible": "params.apply_orsa=='1'"
-        },
-        {
             "id": "orsa_precision",
-            "label": " <p align=\"right\">ORSA precision &#8804  </p>",
+            "label": " <p align=\"right\">precision &#8804  </p>",
             "type": "range",
             "values": {
                 "default": 10,
@@ -242,7 +241,7 @@
                 "min": 0,
                 "step": 1
             },
-            "visible": "(params.apply_orsa=='1')&&(params.default_orsa_precision=='0')"
+            "visible": "params.default_orsa_precision=='0'"
         }
     ],
     "results": [
@@ -266,7 +265,7 @@
             "Query on Target": {"img": "panorama.png"}
             },
             "type": "gallery",
-            "visible": "(params.apply_orsa=='1')&&(params.orsa=='0')"
+            "visible": "(params.orsa=='2')||(params.orsa=='4')"
         },
        {
             "contents": {
@@ -289,5 +288,5 @@
             "type": "text_file"
         }
     ],
-    "run": "${demoextras}/main_caller.sh input_0.png input_1.png $apply_orsa $orsa $desc_type $optimal_affine_simu $default_tilt_tol $radius $acontrario $default_matching_ratio $match_ratio $default_orsa_precision $orsa_precision False $eigen $eigen_thres $tensoreigen $tensor_thres $filter_radius $resize"
+    "run": "${demoextras}/main_caller.sh input_0.png input_1.png apply_orsa $orsa $desc_type $optimal_affine_simu $default_tilt_tol $radius $acontrario $default_matching_ratio $match_ratio $default_orsa_precision $orsa_precision False $eigen $eigen_thres $tensoreigen $tensor_thres $filter_radius $resize"
 }

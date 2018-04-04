@@ -37,8 +37,8 @@
 
 
 
-extern int ORSA_num_min;
-extern double ORSA_precision;
+extern int Filter_num_min;
+extern double Filter_precision;
 
 
 typedef libNumerics::matrix<double> TypeMap;

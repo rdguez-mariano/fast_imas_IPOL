@@ -411,7 +411,7 @@ void areazoom_image(vector<float>& ipixels, size_t& w1, size_t& h1, float areaS)
 #include <map>
 #include <string>
 #include <iostream>
-enum StringValue { _wrongvalue,_im1, _im2,_im3,_max_keys_im3,_im3_only, _applyfilter, _IMAS_INDEX, _covering,_match_ratio, _orsa_precision, _eigen_threshold, _tensor_eigen_threshold, _filter_radius, _fixed_area};
+enum StringValue { _wrongvalue,_im1, _im2,_im3,_max_keys_im3,_im3_only, _applyfilter, _IMAS_INDEX, _covering,_match_ratio, _filter_precision, _eigen_threshold, _tensor_eigen_threshold, _filter_radius, _fixed_area};
 static std::map<std::string, int> strmap;
 void buildmap()
 {
@@ -425,7 +425,7 @@ void buildmap()
     strmap["-desc"] = _IMAS_INDEX;
     strmap["-covering"] = _covering;
     strmap["-match_ratio"] = _match_ratio;
-    strmap["-orsa_precision"] = _orsa_precision;
+    strmap["-filter_precision"] = _filter_precision;
     strmap["-eigen_threshold"] = _eigen_threshold;
     strmap["-tensor_eigen_threshold"] = _tensor_eigen_threshold;
     strmap["-filter_radius"] = _filter_radius;
@@ -489,9 +489,9 @@ void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,siz
             im2 = ipixels2;
             break;
         }
-        case _orsa_precision:
+        case _filter_precision:
         {
-            ORSA_precision = atof(argv[count]);
+            Filter_precision = atof(argv[count]);
             break;
         }
         case _applyfilter:
@@ -500,19 +500,31 @@ void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,siz
             switch (applyfilter) {
             case ORSA_FUNDAMENTAL:
             {
-                ORSA_num_min = 8;
-                ORSA_precision=3;
+                Filter_num_min = 8;
+                Filter_precision=3;
                 break;
             }
             case ORSA_HOMOGRAPHY:
             {
-                ORSA_num_min = 5;
-                ORSA_precision=24;
+                Filter_num_min = 5;
+                Filter_precision=24;
+                break;
+            }
+            case USAC_FUNDAMENTAL:
+            {
+                Filter_num_min = 8;
+                Filter_precision=3;
+                break;
+            }
+            case USAC_HOMOGRAPHY:
+            {
+                Filter_num_min = 5;
+                Filter_precision=24;
                 break;
             }
             case 0:
             {
-                ORSA_num_min = 0;
+                Filter_num_min = 0;
                 break;
             }
             }

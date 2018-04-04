@@ -16,7 +16,7 @@ This version of IMAS is based on the concept of hyper-descriptors and their asso
 This work has been published on the Image Processing OnLine (IPOL) Journal. You can test it online with your own images on this link: [IPOL demo](http://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000011).
 
 ## Prerequisites
-This source code is standalone and will normally compile with any compiler. Although one functionality requires two external libraries: USAC.
+This source code is standalone, although the USAC Filter requires two external libraries. If any compilation error arises, try first to deactivate USAC.
 
 ### Activating USAC
 If you want to use the [USAC](http://www.cs.unc.edu/~rraguram/usac/) algorithm you'll need to install some libraries first. On ubuntu you might want to type something like:
@@ -40,24 +40,24 @@ Input Arguments:
 * "-im1 PATH/im1.png" Selects the query input image.
 * "-im2 PATH/im2.png" Selects the target input image.
 * "-im3 PATH/im3.png" Selects the a-contrario input image and activates the a-contrario Matcher. **(None by default)**
-* "-max_keys_im3 N" Sets to N the maximum number of keypoints to be used for the a-contrario Matcher. **(All by default)**
-* "-applyfilter F" Selects the geometric filter to apply, the number F stands for:
+* "-max_keys_im3 VALUE_N" Sets the maximum number of keypoints to be used for the a-contrario Matcher to VALUE_N. **(All by default)**
+* "-applyfilter VALUE_F" Selects the geometric filter to apply, the number VALUE_F stands for:
   - 1 -> ORSA Fundamental
   - 2 -> ORSA Homography **(Default)**
   - 3 -> USAC Fundamental
   - 4 -> USAC Homography
-* "-desc X" Selects the SIIM method. X stands for:
+* "-desc VALUE_X" Selects the SIIM method. VALUE_X stands for:
   - 1 -> SIFT
   - 2 -> SURF
   - 11 -> Root-SIFT **(Default)**
   - 21 -> HALF-SIFT
   - 22 -> HALF-ROOT-SIFT
-* "-covering C" Selects the near optimal covering to be used. Available choices are: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 and 2. **(1.7 by default)**
-* "-match_ratio M" Sets the Nearest Neighbour Distance Ratio. M is a real number between 0 and 1. **(0.6 for SURF and 0.8 for SIFT based)**
-* "-orsa_precision P" Sets the precision threshold for ORSA (both Fundamental and Homography). P is normally in terms of pixels. **(3 pixels for Fundamental and 10 pixels for Homography)**
+* "-covering VALUE_C" Selects the near optimal covering to be used. Available choices are: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 and 2. **(1.7 by default)**
+* "-match_ratio VALUE_M" Sets the Nearest Neighbour Distance Ratio. VALUE_M is a real number between 0 and 1. **(0.6 for SURF and 0.8 for SIFT based)**
+* "-filter_precision VALUE_P" Sets the precision threshold for ORSA or USAC. VALUE_P is normally in terms of pixels. **(3 pixels for Fundamental and 10 pixels for Homography)**
 * "-filter_radius rho" It tells IMAS to use rho-hyperdescriptors **(4 pixels by default)**.
 * "-fixed_area" Resizes input images to have areas of about 800*600. *This affects the position of matches and all output images*
-* "-eigen_threshold ET" and "-tensor_eigen_threshold TT" Controls thresholds for eliminating aberrant descriptors. **(Both set to 10 by default)**
+* "-eigen_threshold VALUE_ET" and "-tensor_eigen_threshold VALUE_TT" Controls thresholds for eliminating aberrant descriptors. **(Both set to 10 by default)**
 
 For example, suppose we have two images (adam1.png and adam2.png) on which we want to apply Optimal-Affine-RootSIFT with the near optimal covering of 1.4. This is obtained by typing on bash the following:
 
