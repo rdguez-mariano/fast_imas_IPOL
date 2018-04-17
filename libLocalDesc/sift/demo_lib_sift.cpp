@@ -119,12 +119,12 @@ int NotOnEdge( flimage& dog, int r, int c, float octSize,siftPar &par);
 
 float FitQuadratic(float offset[3],  flimage* dogs, int s, int r, int c);
 
-void InterpKeyPoint(flimage blur,
+void InterpKeyPoint(flimage& blur,
                     flimage* dogs, int s, int r, int c,
                     const flimage& grad, const flimage& ori, flimage& map,
                     float octSize, keypointslist& keys, int movesRemain, siftPar &par);
 
-void AssignOriHist(const flimage blur,
+void AssignOriHist(const flimage& blur,
                    const flimage& grad, const flimage& ori, float octSize,
                    float octScale, float octRow, float octCol, keypointslist& keys, siftPar &par);
 
@@ -134,7 +134,7 @@ void SmoothHistogram(
 float InterpPeak(
         float a, float b, float c);
 
-void MakeKeypoint(const flimage blur,
+void MakeKeypoint(const flimage& blur,
                   const flimage& grad, const flimage& ori, float octSize, float octScale,
                   float octRow, float octCol, float angle, keypointslist& keys, siftPar &par);
 
@@ -538,7 +538,7 @@ int NotOnEdge(flimage& dog, int r, int c, float octSize,siftPar &par)
    s is scale (index of DOGs image), and (r,c) is (row, col) location.
    Add to the list of keys with any new keys added.
 */
-void InterpKeyPoint( flimage blur,
+void InterpKeyPoint( flimage& blur,
                      flimage* dogs, int s, int r, int c,
                      const flimage& grad, const flimage& ori, flimage& map,
                      float octSize, keypointslist& keys, int movesRemain,siftPar &par)
@@ -700,7 +700,7 @@ float FitQuadratic(float offset[3], flimage* dogs, int s, int r, int c)
    region.  The histogram is smoothed and the largest peak selected.
    The results are in the range of -PI to PI.
 */
-void AssignOriHist(const flimage blur,
+void AssignOriHist(const flimage& blur,
                    const flimage& grad, const flimage& ori, float octSize,
                    float octScale, float octRow, float octCol, keypointslist& keys, siftPar &par)
 {
@@ -832,7 +832,7 @@ float InterpPeak(float a, float b, float c)
 
    Modified by Mariano Rodríguez to obtain HALF-SIFT
  */
-void MakeKeypoint(const flimage blur,
+void MakeKeypoint(const flimage& blur,
                   const flimage& grad, const flimage& ori, float octSize, float octScale,
                   float octRow, float octCol, float angle, keypointslist& keys,siftPar &par)
 {

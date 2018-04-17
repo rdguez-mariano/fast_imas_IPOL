@@ -91,6 +91,10 @@ This code comes with a doxygen documentation. It can be generated locally from t
 * **Julie Delon** - [web page](https://delon.wp.imt.fr/)
 * **Jean-Michel Morel** - [web page](https://sites.google.com/site/jeanmichelmorelcmlaenscachan/)
 
+## Contributors
+
+* **Thibaud Ehret** - [web page](http://perso.eleves.ens-rennes.fr/people/thibaud.ehret/index.html)
+
 ## License
 
 This project is licensed under the BSD License - see the [LICENSE](LICENSE) file for details
