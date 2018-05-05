@@ -1,8 +1,8 @@
 /**
-  * @file main_standalone.cpp
+  * @file main.cpp
   * @author Mariano Rodríguez
   * @date 2018
-  * @brief Stand-alone verion of IMAS
+  * @brief A caller for IMAS
   */
 
 #include <string>
