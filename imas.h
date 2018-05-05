@@ -13,21 +13,51 @@
 #include "libNumerics/numerics.h"
 #include <string>
 #include <time.h>
+
+#ifdef _NO_OPENCV
 #include "libLocalDesc/sift/demo_lib_sift.h"
 #include "libLocalDesc/surf/extract_surf.h"
 #include "libLocalDesc/surf/lib_match_surf.h"
+#else
+//opencv
+#include <opencv2/core.hpp>
+#include "opencv2/opencv.hpp"
+#include "opencv2/opencv_modules.hpp"
+#include "opencv2/core/core.hpp"
+#include "opencv2/features2d.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/calib3d/calib3d.hpp"
+#include <opencv2/xfeatures2d.hpp>
+#include "opencv2/flann/miniflann.hpp"
+#endif
+
 #include <vector>
 
 
 
-
-#define IMAS_SIFT 1
-#define IMAS_SURF 2
-#define IMAS_ROOTSIFT 11
-#define IMAS_SIFT2 12
-#define IMAS_HALFSIFT 21
-#define IMAS_HALFROOTSIFT 22
-
+#ifdef _NO_OPENCV
+    #define IMAS_SIFT 1
+    #define IMAS_SURF 2
+    #define IMAS_ROOTSIFT 11
+    #define IMAS_SIFT2 12
+    #define IMAS_HALFSIFT 21
+    #define IMAS_HALFROOTSIFT 22
+#else
+    #define IMAS_SIFT 1
+    #define IMAS_SURF 2
+    #define IMAS_BRISK 3
+    #define IMAS_BRIEF 4
+    #define IMAS_ORB 5
+    #define IMAS_DAISY 6
+    #define IMAS_AKAZE 7
+    #define IMAS_LATCH 8
+    #define IMAS_FREAK 9
+    #define IMAS_LUCID 10
+    #define IMAS_ROOTSIFT 11
+    #define IMAS_AGAST 13
+    #define IMAS_SIFT2 12
+    #define IMAS_HALFSIFT 21
+#endif
 
 // applyfilter equal to the sum of the desired filters to apply
 #define ORSA_FUNDAMENTAL 1
@@ -47,9 +77,11 @@ extern std::vector<TypeMap> IdentifiedMaps;
 
 extern int rho;
 
-
+#ifdef _NO_OPENCV
 typedef double IMAS_time;
-
+#else
+typedef int64 IMAS_time;
+#endif
 
 extern int desc_type;
 
@@ -68,6 +100,7 @@ extern float default_radius;
 
 namespace IMAS
 {
+#ifdef _NO_OPENCV
 class IMAS_Matrix
 {
 public:
@@ -78,6 +111,9 @@ public:
     int rows; //= height
     bool empty();
 };
+#else
+typedef cv::Mat IMAS_Matrix;
+#endif
 IMAS_time IMAS_getTickCount();
 double IMAS_getTickFrequency();
 

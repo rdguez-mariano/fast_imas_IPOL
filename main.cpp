@@ -15,7 +15,7 @@
 #include "imas.h"
 #include "io_png/io_png.h"
 #include "libNumerics/numerics.h"
-
+#include "library.h"
 
 
 
@@ -105,7 +105,7 @@ void panorama(std::vector<float>& I1,int w1, int h1,std::vector<float>& I2, int 
  * @brief write_example_parallelograms
  * @author Mariano Rodríguez
  */
-void write_example_parallelograms(std::vector<float>& ipixels1,int w1, int h1,vector<keypoint_simple>& matchings)
+void write_example_parallelograms(std::vector<float>& ipixels1,int w1, int h1,std::vector<keypoint_simple>& matchings)
 {
     int wo =  w1;
     int ho = h1;
@@ -626,11 +626,13 @@ int main(int argc, char **argv)
     if (matchratio>0.0f)
         update_matchratio(matchratio);
 
+#ifdef _NO_OPENCV
     if (edge_thres>0.0f)
         update_edge_threshold(edge_thres);
 
     if (tensor_thres>0.0f)
         update_tensor_threshold(tensor_thres);
+#endif
 
     if ( ((int)w3>0)&&((int)h3>0) )
     {    

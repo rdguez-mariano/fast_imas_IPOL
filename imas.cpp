@@ -12,7 +12,10 @@
 #include "libSimuTilts/frot.h"
 #include "libSimuTilts/fproj.h"
 
+
+#ifdef _NO_OPENCV
 #include "libLocalDesc/sift/demo_lib_sift.h"
+#endif
 
 #include "libOrsa/orsa_fundamental.hpp"
 #include "libOrsa/orsa_homography.hpp"
@@ -95,23 +98,34 @@ bool sift_desc = true;
 #endif
 
 
-
+#ifdef _NO_OPENCV
 siftPar siftparameters;
+#endif
+
 
 IMAS_time IMAS::IMAS_getTickCount()
 {
+#ifndef _NO_OPENCV
+    return(cv::getTickCount());
+#else
 #ifdef _OPENMP
     return(omp_get_wtime());
 #else
     return(time(0));
 #endif
+#endif
 
 }
 double IMAS::IMAS_getTickFrequency()
 {
+#ifndef _NO_OPENCV
+    return(cv::getTickFrequency());
+#else
     return(1.0);
+#endif
 }
 
+#ifdef _NO_OPENCV
 bool IMAS::IMAS_Matrix::empty()
 {
     return((this->cols+this->rows)==0);
@@ -132,25 +146,6 @@ IMAS::IMAS_Matrix::IMAS_Matrix(std::vector<float> input_data, int width, int hei
         data[cc] =input_data[cc];
 }
 
-void updateparams()
-{
-    default_sift_parameters(siftparameters);
-    //siftparameters.MatchRatio = nndrRatio;
-    siftparameters.L2norm = (normType==IMAS::NORM_L2);
-    siftparameters.MODE_ROOT = rooted;
-    if (desc_type==IMAS_HALFSIFT)
-    {
-        siftparameters.half_sift_trick = true;
-    }
-}
-
-void update_matchratio(float matchratio)
-{
-    //siftparameters.MatchRatio = matchratio;
-    nndrRatio = matchratio;
-}
-
-
 void update_tensor_threshold(float tensor_thres)
 {
     siftparameters.TensorThresh = tensor_thres;
@@ -161,12 +156,177 @@ void update_edge_threshold(float edge_thres)
     siftparameters.EdgeThresh = edge_thres;
     siftparameters.EdgeThresh1 = edge_thres;
 }
+#endif
+
+void update_matchratio(float matchratio)
+{
+    //siftparameters.MatchRatio = matchratio;
+    nndrRatio = matchratio;
+}
+
+
+void updateparams()
+{
+#ifdef _NO_OPENCV
+    default_sift_parameters(siftparameters);
+    //siftparameters.MatchRatio = nndrRatio;
+    siftparameters.L2norm = (normType==IMAS::NORM_L2);
+    siftparameters.MODE_ROOT = rooted;
+    if (desc_type==IMAS_HALFSIFT)
+    {
+        siftparameters.half_sift_trick = true;
+    }
+#else
+    // .... Put params to update here
+#endif
+}
 
 
 std::string SetDetectorDescriptor(int DDIndex)
 {
     switch (DDIndex)
     {
+#ifndef _NO_OPENCV
+    case IMAS_SIFT:
+    {
+        desc_name="SIFT";
+        normType = cv::NORM_L2;
+        nndrRatio = 0.8f;
+        desc_type = IMAS_SIFT;
+        binary_desc = false;
+        default_radius = 1.7f;
+        break;
+    }
+    case IMAS_SIFT2:
+    {
+        desc_name="SIFT";
+        normType = cv::NORM_L1;
+        nndrRatio = 0.73f;
+        desc_type = IMAS_SIFT;
+        binary_desc = false;
+        default_radius = -1.8f;
+        break;
+    }
+    case IMAS_HALFSIFT:
+    {
+        desc_name="HALFSIFT";
+        normType = cv::NORM_L1;
+        nndrRatio = 0.73f;
+        desc_type = IMAS_HALFSIFT;
+        binary_desc = false;
+        default_radius = 1.7f;
+        break;
+    }
+    case IMAS_ROOTSIFT:
+    {
+        desc_name="RootSIFT";
+        normType = cv::NORM_L2;
+        nndrRatio = 0.8f;
+        desc_type = IMAS_ROOTSIFT;
+        binary_desc = false;
+        default_radius = 1.7f;
+        break;
+    }
+    case IMAS_SURF:
+    {
+        desc_name="SURF";
+        normType = cv::NORM_L1;
+        nndrRatio = 0.73f;
+        desc_type = IMAS_SURF;
+        binary_desc = false;
+        default_radius = 1.4f;
+        break;
+    }
+    case IMAS_BRISK:
+    {
+        desc_name="BRISK";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_BRISK;
+        binary_desc = true;
+        normType = cv::NORM_HAMMING;
+        default_radius = 1.7f;
+        break;
+    }
+    case IMAS_FREAK:
+    {
+        desc_name="FREAK";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_FREAK;
+        binary_desc = true;
+        normType = cv::NORM_HAMMING;
+        default_radius = 1.6f;
+        break;
+    }
+    case IMAS_ORB:
+    {
+        desc_name="ORB";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_ORB;
+        binary_desc = true;
+        normType = cv::NORM_HAMMING;
+        default_radius = 1.4f;
+        break;
+    }
+    case IMAS_BRIEF:
+    {
+        desc_name="BRIEF";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_BRIEF;
+        binary_desc = true;
+        normType = cv::NORM_HAMMING;
+        default_radius = 1.4f;
+        break;
+    }
+    case IMAS_AGAST:
+    {
+        desc_name="AGAST";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_AGAST;
+        binary_desc = true;
+        normType = cv::NORM_HAMMING;
+        break;
+    }
+    case IMAS_LATCH:
+    {
+        desc_name="LATCH";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_LATCH;
+        binary_desc = true;
+        normType = cv::NORM_HAMMING;
+        default_radius = 1.55f;
+        break;
+    }
+    case IMAS_LUCID:
+    {
+        desc_name="LUCID";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_LUCID;
+        binary_desc = true;
+        normType = cv::NORM_HAMMING;
+        break;
+    }
+    case IMAS_DAISY:
+    {
+        desc_name="DAISY";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_DAISY;
+        binary_desc = false;
+        normType = cv::NORM_L1;
+        default_radius = 1.55f;
+        break;
+    }
+    case IMAS_AKAZE:
+    {
+        desc_name="AKAZE";
+        nndrRatio = 0.8f;
+        desc_type = IMAS_AKAZE;
+        binary_desc = true;
+        normType = cv::NORM_HAMMING;
+        default_radius = 1.7f;
+        break;
+    }
+
+#else
     case IMAS_SIFT:
     {
         desc_name="SIFT";
@@ -238,6 +398,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         sift_desc = false;
         break;
     }
+#endif
     }
     updateparams();
     return(desc_name);
@@ -247,6 +408,7 @@ std::string SetDetectorDescriptor(int DDIndex)
 
 void vectorimage2imasimage(std::vector<float>& input_image, IMAS::IMAS_Matrix &output_image, int width, int height)
 {
+#ifdef _NO_OPENCV
     //COPY
     //output_image = *(new IMAS::IMAS_Matrix(input_image,width,height));
 
@@ -255,25 +417,159 @@ void vectorimage2imasimage(std::vector<float>& input_image, IMAS::IMAS_Matrix &o
     output_image.data = input_image.data();
     output_image.cols = width;
     output_image.rows = height;
+#else
+    output_image.create(height, width, CV_8UC1);//cv::imread(argv[2]);
+
+    for (int i = 0;  i < output_image.rows; i++)
+    {
+        for (int j = 0; j < output_image.cols; j++)
+        {
+            output_image.data[((output_image.cols)*i)+j] = (uchar) floor(input_image[((output_image.cols)*i)+j]);
+        }
+    }
+#endif
 }
 
 void imasimage2vectorimage(IMAS::IMAS_Matrix input_image,std::vector<float>& output_image,int& width, int& height)
 {
+ #ifdef _NO_OPENCV
     width = input_image.cols;
     height = input_image.rows;
     output_image.resize(width*height);
     for (int i = 0;  i < width*height; i++)
         output_image[i] = input_image.data[i];
+#else
+    output_image.clear();
+    width = input_image.cols;
+    height = input_image.rows;
+
+    for (int i = 0;  i < input_image.rows; i++)
+    {
+        for (int j = 0; j < input_image.cols; j++)
+        {
+            output_image.push_back( (float) input_image.data[((input_image.cols)*i)+j] );
+        }
+    }
+#endif
 }
 
 
 void floatarray2imasimage(float *input_image, IMAS::IMAS_Matrix &output_image, int width, int height)
 {
+#ifdef _NO_OPENCV
     output_image = *(new IMAS::IMAS_Matrix);
     output_image.data = input_image;
     output_image.cols = width;
     output_image.rows = height;
+#else
+    output_image.create(height, width, CV_8UC1);//cv::imread(argv[2]);
+
+    for (int i = 0;  i < output_image.rows; i++)
+    {
+        for (int j = 0; j < output_image.cols; j++)
+        {
+            output_image.data[((output_image.cols)*i)+j] = (uchar) floor(input_image[((output_image.cols)*i)+j]);
+        }
+    }
+#endif
 }
+
+
+
+#ifndef _NO_OPENCV
+void detector_and_descriptor(cv::Ptr<cv::FeatureDetector> &detector, cv::Ptr<cv::DescriptorExtractor> &extractor)
+{
+    switch (desc_type)
+    {
+    case IMAS_SIFT:
+    {
+        detector = cv::xfeatures2d::SIFT::create();
+        extractor = cv::xfeatures2d::SIFT::create();
+        break;
+    }
+    case IMAS_SIFT2:
+    {
+        detector = cv::xfeatures2d::SIFT::create();
+        extractor = cv::xfeatures2d::SIFT::create();
+        break;
+    }
+    case IMAS_HALFSIFT:
+    {
+        detector = cv::xfeatures2d::SIFT::create();
+        extractor = cv::xfeatures2d::SIFT::create();
+        break;
+    }
+    case IMAS_ROOTSIFT:
+    {
+        detector = cv::xfeatures2d::SIFT::create();
+        extractor = cv::xfeatures2d::SIFT::create();
+        break;
+    }
+    case IMAS_SURF:
+    {
+        detector = cv::xfeatures2d::SURF::create();
+        extractor = cv::xfeatures2d::SURF::create();
+        break;
+    }
+    case IMAS_BRISK:
+    {
+        detector = cv::BRISK::create();
+        extractor = cv::BRISK::create();
+        break;
+    }
+    case IMAS_FREAK:
+    {
+        detector = cv::xfeatures2d::SURF::create();
+        extractor = cv::xfeatures2d::FREAK::create();
+        break;
+    }
+    case IMAS_ORB:
+    {
+        detector = cv::ORB::create(1500);
+        extractor = cv::ORB::create();
+        break;
+    }
+    case IMAS_BRIEF:
+    {
+        detector = cv::xfeatures2d::StarDetector::create();
+        extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
+        break;
+    }
+    case IMAS_AGAST:
+    {
+        detector = cv::ORB::create();
+        extractor = cv::AgastFeatureDetector::create();
+        break;
+    }
+    case IMAS_LATCH:
+    {
+        detector = cv::ORB::create(1500);
+        extractor = cv::xfeatures2d::LATCH::create();
+        break;
+    }
+    case IMAS_LUCID:
+    {
+        detector = cv::ORB::create();
+        extractor = cv::xfeatures2d::LUCID::create(); // Needs 3-channels image
+        break;
+    }
+    case IMAS_DAISY:
+    {
+        detector = cv::ORB::create(1500);
+        extractor = cv::xfeatures2d::DAISY::create();
+        break;
+    }
+    case IMAS_AKAZE:
+    {
+        detector = cv::AKAZE::create();
+        extractor = cv::AKAZE::create();
+        break;
+    }
+
+    }
+}
+#endif
+
 
 
 void compute_local_descriptor_keypoints(IMAS::IMAS_Matrix &queryImg,  IMAS_keypointlist& KPs, float t, float theta)
@@ -281,6 +577,7 @@ void compute_local_descriptor_keypoints(IMAS::IMAS_Matrix &queryImg,  IMAS_keypo
 
     if(!queryImg.empty())
     {
+#ifdef _NO_OPENCV
         if (sift_desc)
         {
             keypointslist* keys = new keypointslist;
@@ -315,6 +612,68 @@ void compute_local_descriptor_keypoints(IMAS::IMAS_Matrix &queryImg,  IMAS_keypo
                 KPs[i].theta = theta;
             }
         }
+#else
+        ////////////////////////////
+        // EXTRACT KEYPOINTS and FEATURES
+        ////////////////////////////
+        cv::Ptr<cv::FeatureDetector> detector;
+        cv::Ptr<cv::DescriptorExtractor> extractor;
+        detector_and_descriptor(detector, extractor);
+
+
+        cv::Mat dlist;
+        std::vector<cv::KeyPoint> klist;
+        detector->detect(queryImg, klist);
+        extractor->compute(queryImg, klist, dlist);
+
+        if (desc_type==IMAS_ROOTSIFT)
+        {
+                        int rows;
+                        rows = dlist.rows;
+
+                        for (int ii=0;ii<rows;ii++)
+                        {
+                            cv::Mat temp,temp2;
+                            cv::normalize( dlist.row(ii), temp, 1, cv::NORM_L1);
+                            cv::sqrt(temp, temp2);
+                            temp2.row(0).copyTo(dlist.row(ii));
+                        }
+
+        }
+        if (desc_type==IMAS_HALFSIFT)
+        {
+                        int rows;
+                        cv::Mat temp;
+                        rows = dlist.rows;
+
+                        for (int ii=0;ii<rows;ii++)
+                            for (int jhist=0;jhist<16;jhist++)
+                                for(int jori=0;jori<4;jori++)
+                                {
+                                    temp = ( dlist.row(ii).col(jhist*8+jori) + dlist.row(ii).col(jhist*8+jori+4) );
+                                    temp.copyTo(dlist.row(ii).col(jhist*8+jori));
+                                    temp.copyTo(dlist.row(ii).col(jhist*8+jori+4));
+
+                                }
+        }
+
+
+        int rows;
+        rows = dlist.rows;
+        KPs.resize(klist.size());
+        for (int i=0;i<rows;i++)
+        {
+            KPs[i].pt.x = klist[i].pt.x;
+            KPs[i].pt.y = klist[i].pt.y;
+            KPs[i].size = klist[i].size;
+            KPs[i].scale = klist[i].octave;
+            KPs[i].angle = klist[i].angle;
+            KPs[i].t = t;
+            KPs[i].theta = theta;
+
+            KPs[i].pt.kp_ptr = new cv::Mat(dlist.row(i));
+        }
+#endif
     }
 }
 
@@ -628,7 +987,7 @@ void ORSA_HomographyFilter(matchingslist& matchings,int w1,int h1,int w2,int h2,
 
 
 
-
+#ifdef _NO_OPENCV
 //unsigned int contador = 0;
 template <unsigned int OriSize,unsigned int IndexSize>
 /**
@@ -662,6 +1021,7 @@ float distance_sift(keypoint_base<OriSize,IndexSize> *k1,keypoint_base<OriSize,I
 
     return distsq;
 }
+#endif
 
 
 /**
@@ -675,19 +1035,22 @@ float distance_sift(keypoint_base<OriSize,IndexSize> *k1,keypoint_base<OriSize,I
  *   where   \f$\delta(x,y)\f$  is either  \f$\Vert x - y \Vert_{L_1} \f$  or  \f$\Vert x - y \Vert_{L_2} \f$
  * @author Mariano Rodríguez
  */
-float distance_imasKP(IMAS::IMAS_KeyPoint *k1,IMAS::IMAS_KeyPoint *k2, float& dist,int &ind1, int &ind2, bool L2norm)
+float distance_imasKP(IMAS::IMAS_KeyPoint *k1,IMAS::IMAS_KeyPoint *k2, float& dist,int &ind1, int &ind2, int tnorm)
 {
     float tdist = dist;
     for(int i1=0;i1<(int)k1->KPvec.size();i1++)
         for(int i2=0;i2<(int)k2->KPvec.size();i2++)
         {
-
+#ifndef _NO_OPENCV
+            tdist = (float)cv::norm(*static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr),*static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr),tnorm);
+            //tdist = opencv_distance(static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr));
+#else
             if (sift_desc)
-                tdist = distance_sift(static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr), dist, L2norm);
+                tdist = distance_sift(static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr), dist, tnorm==IMAS::NORM_L2);
             else
                 if (static_cast<descriptor*>(k1->KPvec[i1].pt.kp_ptr)->kP->signLaplacian==static_cast<descriptor*>(k2->KPvec[i2].pt.kp_ptr)->kP->signLaplacian)
                     tdist = euclideanDistance(static_cast<descriptor*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<descriptor*>(k2->KPvec[i2].pt.kp_ptr));
-
+#endif
             if ( dist>tdist )
             {
                 dist = tdist;
@@ -713,18 +1076,25 @@ initially proposed by D. Lowe in \cite Lowe2004.
  * @return Found minimal ratio
  * @author Mariano Rodríguez
  */
-float CheckForMatchIMAS(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoint*> klist, int& min, int& ind1, int& ind2, bool L2norm)
+float CheckForMatchIMAS(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoint*>& klist, int& min, int& ind1, int& ind2, int tnorm)
 {
     float	dsq, distsq1, distsq2;
-    if (L2norm)
+#ifdef _NO_OPENCV
+    if (tnorm==IMAS::NORM_L2)
         distsq1 = distsq2 = BIG_NUMBER_L2;
     else
         distsq1 = distsq2 = BIG_NUMBER_L1;
+#else
+    if (tnorm==cv::NORM_L2)
+        distsq1 = distsq2 = BIG_NUMBER_L2;
+    else
+        distsq1 = distsq2 = BIG_NUMBER_L1;
+#endif
 
     for (int j=0; j< (int) klist.size(); j++)
     {
         int i1=-1 ,i2=-1;
-        dsq = distance_imasKP(key, klist[j], distsq2,i1,i2, L2norm);
+        dsq = distance_imasKP(key, klist[j], distsq2,i1,i2, tnorm);
 
         if (dsq < distsq1) {
             distsq2 = distsq1;
@@ -753,18 +1123,25 @@ float CheckForMatchIMAS(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoin
  * @return Found minimal ratio
  * @author Mariano Rodríguez
  */
-float CheckForMatchIMAS_acontrario(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoint*> klist, int& min, int& ind1, int& ind2, bool L2norm)
+float CheckForMatchIMAS_acontrario(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoint*>& klist, int& min, int& ind1, int& ind2, int tnorm)
 {
     float	dsq, distsq1, distsq2, distsq3;
-    if (L2norm)
-        distsq1 = distsq2 = distsq3 = BIG_NUMBER_L2;
+#ifdef _NO_OPENCV
+    if (tnorm==IMAS::NORM_L2)
+        distsq1 = distsq2 = BIG_NUMBER_L2;
     else
-        distsq1 = distsq2 = distsq3 =  BIG_NUMBER_L1;
+        distsq1 = distsq2 = BIG_NUMBER_L1;
+#else
+    if (tnorm==cv::NORM_L2)
+        distsq1 = distsq2 = BIG_NUMBER_L2;
+    else
+        distsq1 = distsq2 = BIG_NUMBER_L1;
+#endif
 
     for (int j=0; j< (int) klist.size(); j++)
     {
         int i1=-1, i2=-1;
-        dsq = distance_imasKP(key, klist[j], distsq2,i1,i2, L2norm);
+        dsq = distance_imasKP(key, klist[j], distsq2,i1,i2, tnorm);
 
         if (dsq < distsq1) {
             distsq2 = distsq1;
@@ -777,15 +1154,22 @@ float CheckForMatchIMAS_acontrario(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::I
         }
     }
 
-    if (L2norm)
+#ifdef _NO_OPENCV
+    if (tnorm==IMAS::NORM_L2)
         distsq2 = distsq3 = BIG_NUMBER_L2;
     else
         distsq2 = distsq3 =  BIG_NUMBER_L1;
+#else
+    if (tnorm==cv::NORM_L2)
+        distsq2 = distsq3 = BIG_NUMBER_L2;
+    else
+        distsq2 = distsq3 =  BIG_NUMBER_L1;
+#endif
 
     for (int j=0; j< (int) keys3.size(); j++)
     {
         int i1=-1, i2=-1;
-        dsq = distance_imasKP(key, keys3[j], distsq3,i1,i2, L2norm);
+        dsq = distance_imasKP(key, keys3[j], distsq3,i1,i2, tnorm);
 
         if (dsq < distsq2) {
             distsq3 = distsq2;
@@ -835,11 +1219,11 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
 
             if (!keys3.empty())
             {
-                sqratio = CheckForMatchIMAS_acontrario(keys1[i], keys2, imatch,ind1,ind2,siftparameters.L2norm);
+                sqratio = CheckForMatchIMAS_acontrario(keys1[i], keys2, imatch,ind1,ind2,normType);
             }
             else
             {
-                sqratio = CheckForMatchIMAS(keys1[i], keys2, imatch,ind1,ind2,siftparameters.L2norm);
+                sqratio = CheckForMatchIMAS(keys1[i], keys2, imatch,ind1,ind2,normType);
             }
             if (sqratio< minratio)
             {
