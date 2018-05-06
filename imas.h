@@ -34,17 +34,15 @@
 #include <vector>
 
 
+#define IMAS_SIFT 1
+#define IMAS_SURF 2
+#define IMAS_ROOTSIFT 11
+#define IMAS_SIFT2 12
+#define IMAS_HALFSIFT 21
 
 #ifdef _NO_OPENCV
-    #define IMAS_SIFT 1
-    #define IMAS_SURF 2
-    #define IMAS_ROOTSIFT 11
-    #define IMAS_SIFT2 12
-    #define IMAS_HALFSIFT 21
     #define IMAS_HALFROOTSIFT 22
 #else
-    #define IMAS_SIFT 1
-    #define IMAS_SURF 2
     #define IMAS_BRISK 3
     #define IMAS_BRIEF 4
     #define IMAS_ORB 5
@@ -53,10 +51,7 @@
     #define IMAS_LATCH 8
     #define IMAS_FREAK 9
     #define IMAS_LUCID 10
-    #define IMAS_ROOTSIFT 11
     #define IMAS_AGAST 13
-    #define IMAS_SIFT2 12
-    #define IMAS_HALFSIFT 21
 #endif
 
 // applyfilter equal to the sum of the desired filters to apply

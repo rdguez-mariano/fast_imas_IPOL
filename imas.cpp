@@ -186,57 +186,98 @@ std::string SetDetectorDescriptor(int DDIndex)
 {
     switch (DDIndex)
     {
-#ifndef _NO_OPENCV
     case IMAS_SIFT:
     {
-        desc_name="SIFT";
-        normType = cv::NORM_L2;
+        desc_name="SIFT L2";
         nndrRatio = 0.8f;
         desc_type = IMAS_SIFT;
         binary_desc = false;
         default_radius = 1.7f;
+        rooted = false;
+        sift_desc = true;
+
+#ifndef _NO_OPENCV
+        normType = cv::NORM_L2;
+        desc_name=desc_name + " (opencv)";
+#else
+        normType = IMAS::NORM_L2;
+#endif
         break;
     }
     case IMAS_SIFT2:
     {
-        desc_name="SIFT";
-        normType = cv::NORM_L1;
+        desc_name="SIFT L1";
         nndrRatio = 0.73f;
         desc_type = IMAS_SIFT;
         binary_desc = false;
-        default_radius = -1.8f;
+        default_radius = 1.7f;
+        rooted = false;
+        sift_desc = true;
+
+#ifndef _NO_OPENCV
+        normType = cv::NORM_L1;
+        desc_name=desc_name + "_opencv";
+#else
+        normType = IMAS::NORM_L1;
+#endif
         break;
     }
     case IMAS_HALFSIFT:
     {
-        desc_name="HALFSIFT";
-        normType = cv::NORM_L1;
-        nndrRatio = 0.73f;
+        desc_name="HalfSIFT L1";
+        nndrRatio = 0.8f;
         desc_type = IMAS_HALFSIFT;
         binary_desc = false;
         default_radius = 1.7f;
+        sift_desc = true;
+        rooted = false;
+
+#ifndef _NO_OPENCV
+        normType = cv::NORM_L1;
+        desc_name=desc_name + "_opencv";
+#else
+        normType = IMAS::NORM_L1;
+#endif
         break;
+
     }
     case IMAS_ROOTSIFT:
     {
         desc_name="RootSIFT";
-        normType = cv::NORM_L2;
         nndrRatio = 0.8f;
         desc_type = IMAS_ROOTSIFT;
         binary_desc = false;
         default_radius = 1.7f;
+        rooted = true;
+        sift_desc = true;
+
+#ifndef _NO_OPENCV
+        normType = cv::NORM_L2;
+        desc_name=desc_name + " (opencv)";
+#else
+        normType = IMAS::NORM_L2;
+#endif
         break;
     }
     case IMAS_SURF:
     {
         desc_name="SURF";
-        normType = cv::NORM_L1;
-        nndrRatio = 0.73f;
+        nndrRatio = 0.6f;
         desc_type = IMAS_SURF;
         binary_desc = false;
         default_radius = 1.4f;
+        sift_desc = false;
+
+#ifndef _NO_OPENCV
+        normType = cv::NORM_L1;
+        desc_name=desc_name + " (opencv)";
+#else
+        normType = IMAS::NORM_L1;
+#endif
         break;
     }
+
+#ifndef _NO_OPENCV
     case IMAS_BRISK:
     {
         desc_name="BRISK";
@@ -245,6 +286,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         binary_desc = true;
         normType = cv::NORM_HAMMING;
         default_radius = 1.7f;
+        sift_desc = false;
         break;
     }
     case IMAS_FREAK:
@@ -255,6 +297,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         binary_desc = true;
         normType = cv::NORM_HAMMING;
         default_radius = 1.6f;
+        sift_desc = false;
         break;
     }
     case IMAS_ORB:
@@ -265,6 +308,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         binary_desc = true;
         normType = cv::NORM_HAMMING;
         default_radius = 1.4f;
+        sift_desc = false;
         break;
     }
     case IMAS_BRIEF:
@@ -275,6 +319,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         binary_desc = true;
         normType = cv::NORM_HAMMING;
         default_radius = 1.4f;
+        sift_desc = false;
         break;
     }
     case IMAS_AGAST:
@@ -284,6 +329,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         desc_type = IMAS_AGAST;
         binary_desc = true;
         normType = cv::NORM_HAMMING;
+        sift_desc = false;
         break;
     }
     case IMAS_LATCH:
@@ -294,6 +340,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         binary_desc = true;
         normType = cv::NORM_HAMMING;
         default_radius = 1.55f;
+        sift_desc = false;
         break;
     }
     case IMAS_LUCID:
@@ -303,6 +350,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         desc_type = IMAS_LUCID;
         binary_desc = true;
         normType = cv::NORM_HAMMING;
+        sift_desc = false;
         break;
     }
     case IMAS_DAISY:
@@ -313,6 +361,7 @@ std::string SetDetectorDescriptor(int DDIndex)
         binary_desc = false;
         normType = cv::NORM_L1;
         default_radius = 1.55f;
+        sift_desc = false;
         break;
     }
     case IMAS_AKAZE:
@@ -323,34 +372,12 @@ std::string SetDetectorDescriptor(int DDIndex)
         binary_desc = true;
         normType = cv::NORM_HAMMING;
         default_radius = 1.7f;
+        sift_desc = false;
         break;
     }
 
 #else
-    case IMAS_SIFT:
-    {
-        desc_name="SIFT";
-        normType = IMAS::NORM_L1;
-        nndrRatio = 0.8f;
-        desc_type = IMAS_SIFT;
-        binary_desc = false;
-        rooted = false;
-        default_radius = 1.7f;
-        sift_desc = true;
-        break;
-    }
-    case IMAS_SIFT2: // ASIFT
-    {
-        desc_name="SIFT";
-        normType = IMAS::NORM_L1;
-        nndrRatio = 0.8f;
-        desc_type = IMAS_SIFT;
-        binary_desc = false;
-        rooted = false;
-        default_radius = -1.8f;
-        sift_desc = true;
-        break;
-    }
+        //// Stand alone
     case IMAS_HALFROOTSIFT:
     {
         desc_name="HalfRootSIFT";
@@ -361,41 +388,6 @@ std::string SetDetectorDescriptor(int DDIndex)
         rooted = true;
         default_radius = 1.7f;
         sift_desc = true;
-        break;
-    }
-    case IMAS_HALFSIFT:
-    {
-        desc_name="HalfSIFT";
-        normType = IMAS::NORM_L1;
-        nndrRatio = 0.8f;
-        desc_type = IMAS_HALFSIFT;
-        binary_desc = false;
-        rooted = false;
-        default_radius = 1.7f;
-        sift_desc = true;
-        break;
-    }
-    case IMAS_ROOTSIFT:
-    {
-        desc_name="RootSIFT";
-        normType = IMAS::NORM_L2;
-        nndrRatio = 0.8f;
-        desc_type = IMAS_ROOTSIFT;
-        binary_desc = false;
-        rooted = true;
-        default_radius = 1.7f; //1.6 pour les petites images
-        sift_desc = true;
-        break;
-    }
-    case IMAS_SURF:
-    {
-        desc_name="SURF";
-        normType = IMAS::NORM_L1;
-        nndrRatio = 0.6f;
-        desc_type = IMAS_SURF;
-        binary_desc = false;
-        default_radius = 1.4f;
-        sift_desc = false;
         break;
     }
 #endif
@@ -432,7 +424,7 @@ void vectorimage2imasimage(std::vector<float>& input_image, IMAS::IMAS_Matrix &o
 
 void imasimage2vectorimage(IMAS::IMAS_Matrix input_image,std::vector<float>& output_image,int& width, int& height)
 {
- #ifdef _NO_OPENCV
+#ifdef _NO_OPENCV
     width = input_image.cols;
     height = input_image.rows;
     output_image.resize(width*height);
@@ -628,33 +620,33 @@ void compute_local_descriptor_keypoints(IMAS::IMAS_Matrix &queryImg,  IMAS_keypo
 
         if (desc_type==IMAS_ROOTSIFT)
         {
-                        int rows;
-                        rows = dlist.rows;
+            int rows;
+            rows = dlist.rows;
 
-                        for (int ii=0;ii<rows;ii++)
-                        {
-                            cv::Mat temp,temp2;
-                            cv::normalize( dlist.row(ii), temp, 1, cv::NORM_L1);
-                            cv::sqrt(temp, temp2);
-                            temp2.row(0).copyTo(dlist.row(ii));
-                        }
+            for (int ii=0;ii<rows;ii++)
+            {
+                cv::Mat temp,temp2;
+                cv::normalize( dlist.row(ii), temp, 1, cv::NORM_L1);
+                cv::sqrt(temp, temp2);
+                temp2.row(0).copyTo(dlist.row(ii));
+            }
 
         }
         if (desc_type==IMAS_HALFSIFT)
         {
-                        int rows;
-                        cv::Mat temp;
-                        rows = dlist.rows;
+            int rows;
+            cv::Mat temp;
+            rows = dlist.rows;
 
-                        for (int ii=0;ii<rows;ii++)
-                            for (int jhist=0;jhist<16;jhist++)
-                                for(int jori=0;jori<4;jori++)
-                                {
-                                    temp = ( dlist.row(ii).col(jhist*8+jori) + dlist.row(ii).col(jhist*8+jori+4) );
-                                    temp.copyTo(dlist.row(ii).col(jhist*8+jori));
-                                    temp.copyTo(dlist.row(ii).col(jhist*8+jori+4));
+            for (int ii=0;ii<rows;ii++)
+                for (int jhist=0;jhist<16;jhist++)
+                    for(int jori=0;jori<4;jori++)
+                    {
+                        temp = ( dlist.row(ii).col(jhist*8+jori) + dlist.row(ii).col(jhist*8+jori+4) );
+                        temp.copyTo(dlist.row(ii).col(jhist*8+jori));
+                        temp.copyTo(dlist.row(ii).col(jhist*8+jori+4));
 
-                                }
+                    }
         }
 
 
@@ -996,16 +988,13 @@ template <unsigned int OriSize,unsigned int IndexSize>
  * @param (k1,k2) Pair of keypoints
  * @param tdist Current minimum distance
  * @param par Which norm to use (either L1 or L2)
- * @return Either \f$\Vert k1 - k2 \Vert_{L_1} \f$ or \f$\Vert k1 - k2 \Vert_{L_2} \f$
+ * @return Either \f$\Vert k1 - k2 \Vert_{L_1} \f$ or \f$\Vert k1 - k2 \Vert_{L_2}^2 \f$
  * @author Mariano Rodríguez
  */
 float distance_sift(keypoint_base<OriSize,IndexSize> *k1,keypoint_base<OriSize,IndexSize> *k2, float tdist, bool L2norm)
 {
-
     float dif;
     float distsq = 0.0;
-
-
 
     float *ik1 = k1->vec;
     float *ik2 = k2->vec;
@@ -1019,6 +1008,31 @@ float distance_sift(keypoint_base<OriSize,IndexSize> *k1,keypoint_base<OriSize,I
             distsq += std::abs(dif);
     }
 
+    return distsq;
+}
+#else
+/**
+ * @brief Computes the classical cv::norm distance but stops computing
+ * once this distance gets bigger than tdist.
+ * @param (k1,k2) Pair of cv keypoints
+ * @param tdist Current minimum distance
+ * @param par Which norm to use (either L1 or L2)
+ * @return Either \f$\Vert k1 - k2 \Vert_{L_1} \f$ or \f$\Vert k1 - k2 \Vert_{L_2}^2 \f$
+ * @author Mariano Rodríguez
+ */
+float distance_sift(cv::Mat* k1, cv::Mat* k2, float tdist, bool L2norm)
+{
+    float dif;
+    float distsq = 0.f;
+
+    for (int i = 0; (i < k1->cols)&&(distsq <= tdist); i++)
+    {
+        dif = k1->at<float>(0,i) - k2->at<float>(0,i);
+        if (L2norm)
+            distsq += dif * dif;
+        else
+            distsq += std::abs(dif);
+    }
     return distsq;
 }
 #endif
@@ -1042,7 +1056,12 @@ float distance_imasKP(IMAS::IMAS_KeyPoint *k1,IMAS::IMAS_KeyPoint *k2, float& di
         for(int i2=0;i2<(int)k2->KPvec.size();i2++)
         {
 #ifndef _NO_OPENCV
-            tdist = (float)cv::norm(*static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr),*static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr),tnorm);
+            if (sift_desc)
+                tdist = distance_sift(static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr),static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr),dist,tnorm==cv::NORM_L2);
+            else
+                tdist = (float)cv::norm(*static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr),*static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr),tnorm);
+//#pragma omp critical
+//            cout<<tdist<<" "<<tdist1<<endl;
             //tdist = opencv_distance(static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr));
 #else
             if (sift_desc)

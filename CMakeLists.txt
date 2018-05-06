@@ -58,10 +58,10 @@ set(IMAS_srcs
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D _NOMEX=1")
 
 # ACTIVATE USAC - needs libconfig and lapack
-set(USAC OFF)
+set(USAC ON)
 
 # OPENCV Control: ON -> Dont uses opencv ; OFF -> Uses opencv
-set(opencv ON)
+set(opencv OFF)
 
 
 

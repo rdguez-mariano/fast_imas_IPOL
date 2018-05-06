@@ -6,8 +6,17 @@ Methods performing Image Matching by Affine Simulation (IMAS) attain affine inva
 - HALF-SIFT
 - HALF-Root-SIFT
 - SURF
+- BRISK (only with OpenCV)
+- FREAK (only with OpenCV)
+- ORB (only with OpenCV)
+- BRIEF (only with OpenCV)
+- AGAST (only with OpenCV)
+- LATCH (only with OpenCV)
+- LUCID (only with OpenCV)
+- DAISY (only with OpenCV)
+- AKAZE (only with OpenCV)
 
-Depending on the SIIM we propose an optimal set of affine simulations following the work: [Covering the Space of Tilts](https://rdguez-mariano.github.io/pages/imas).
+Depending on the SIIM, we propose an optimal set of affine simulations by following the article : [Covering the Space of Tilts](https://rdguez-mariano.github.io/pages/imas).
 
 This version of IMAS is based on the concept of hyper-descriptors and their associated matchers. See [Fast Affine Invariant Image Matching](https://rdguez-mariano.github.io/pages/hyperdescriptors) for more information on this.
 
@@ -15,8 +24,21 @@ This version of IMAS is based on the concept of hyper-descriptors and their asso
 
 This work has been published on the Image Processing OnLine (IPOL) Journal. You can test it online with your own images on this link: [IPOL demo](http://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000011).
 
+*Remark:* The IPOL Journal does not accept OpenCV. So those descriptors only proposed by OpenCV are not available online. On the other hand, USAC is available !
+
 ## Prerequisites
-This source code is standalone, although the USAC Filter requires two external libraries. If any compilation error arises, try first to deactivate USAC.
+This source code is standalone, although there are two optional capabilities (OpenCV 3.2.0 and the USAC Filter) that require external libraries. If any compilation error arises, is probably due to some missing external libraries.
+
+### Activating OpenCV
+In order to use SIIM descriptors proposed by OpenCV you'll need to download, compile and install the OpenCV version 3.2.0.
+
+Then be sure that the CMakeLists.txt file has the OpenCV flag set to ON (.e.g. `set(opencv ON)`) and modify the path in cmake variables to your OpenCV installation accordingly:
+- `set (OpenCV_DIR "/path/to/opencv/share/OpenCV")`
+- `set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/path/to/opencv/share/OpenCV")`
+
+
+### Deactivating OpenCV
+Just be sure that the CMakeLists.txt file has the OpenCV flag set to OFF (.e.g. `set(opencv OFF)`).
 
 ### Activating USAC
 If you want to use the [USAC](http://www.cs.unc.edu/~rraguram/usac/) algorithm you'll need to install some libraries first. On ubuntu you might want to type something like:
@@ -52,6 +74,15 @@ Input Arguments:
   - 11 -> Root-SIFT **(Default)**
   - 21 -> HALF-SIFT
   - 22 -> HALF-ROOT-SIFT
+  - 3 -> BRISK
+  - 4 -> BRIEF
+  - 5 -> ORB
+  - 6 -> DAISY
+  - 7 -> AKAZE
+  - 8 -> LATCH
+  - 9 -> FREAK
+  - 10 -> LUCID
+  - 13 -> AGAST
 * "-covering VALUE_C" Selects the near optimal covering to be used. Available choices are: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 and 2. **(1.7 by default)**
 * "-match_ratio VALUE_M" Sets the Nearest Neighbour Distance Ratio. VALUE_M is a real number between 0 and 1. **(0.6 for SURF and 0.8 for SIFT based)**
 * "-filter_precision VALUE_P" Sets the precision threshold for ORSA or USAC. VALUE_P is normally in terms of pixels. **(3 pixels for Fundamental and 10 pixels for Homography)**
