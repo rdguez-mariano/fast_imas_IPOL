@@ -96,7 +96,24 @@ struct keypoint_base {
     static const unsigned int veclength = IndexSize * IndexSize * OriSize;
 };
 
-struct keypoint:keypoint_base<OriSize1,IndexSize1>{};
+struct keypoint:keypoint_base<OriSize1,IndexSize1>
+{
+#ifdef _ACD
+    double* gradangle;
+    double* gradmod;
+#endif
+};
+
+#ifdef _ACD
+
+/** Label for pixels with undefined gradient. */
+#define NOTDEF -1024.0
+
+extern int NewOriSize1;
+extern double sigma_default;
+extern double step_sigma;
+extern double quant_prec;
+#endif
 
 
 /* List of keypoints: just use the standard class vector: */

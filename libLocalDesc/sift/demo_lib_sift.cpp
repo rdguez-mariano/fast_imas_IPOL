@@ -63,7 +63,194 @@
 std::stringstream tobeprinted;
 
 
+#ifdef _ACD
 
+#include "imas.h"
+int NewOriSize1 = 22;
+double quant_prec = 0.032;
+double step_sigma = -1.0;
+
+/*----------------------------------------------------------------------------*/
+
+/**
+ * @brief Returns the value of an image at given coordinates, zero when of domain.
+ * @author Rafael Grompone von Gioi
+ */
+double image_at(float * image, int X, int Y, int x, int y)
+{
+  if( x>=0 && y>=0 && x<X && y<Y ) return image[x+y*X];
+  else return NOTDEF;
+}
+
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Returns the value of an image interpolated to real coordinates.
+ * @author Rafael Grompone von Gioi
+ */
+double interpolation(float * image, int X, int Y, double x, double y)
+{
+  int xx = (int)floor(x);
+  int yy = (int)floor(y);
+  double cx = x - floor(x);
+  double cy = y - floor(y);
+  double a00 = image_at(image,X,Y, xx  , yy  );
+  double a01 = image_at(image,X,Y, xx+1, yy  );
+  double a10 = image_at(image,X,Y, xx  , yy+1);
+  double a11 = image_at(image,X,Y, xx+1, yy+1);
+
+  /* bilinear interpolation */
+  if ((a00==NOTDEF)||(a01==NOTDEF)||(a10==NOTDEF)||(a11==NOTDEF))
+      return(NOTDEF);
+  else
+    return ((double) a00 * (1.0-cx) * (1.0-cy) +
+           a01 *      cx  * (1.0-cy) +
+           a10 * (1.0-cx) *      cy  +
+           a11 *      cx  *      cy);
+}
+
+
+/**
+ * @brief Memory allocation, print an error and exit if fail.
+ * @author Rafael Grompone von Gioi
+ */
+void * xmalloc(size_t size)
+{
+  void * p;
+  if( size == 0 ) cerr<<"xmalloc: zero size"<<endl;
+  p = malloc(size);
+  if( p == NULL ) cerr<<"xmalloc: out of memory"<<endl;
+  return p;
+}
+
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Sample a rectangular patch of an image of give size, position an resolution.
+ * @author Rafael Grompone von Gioi
+ */
+double * extract_rectangle(float * image, int X, int Y,
+                           double xc, double yc, double theta, double step,
+                           int XX, int YY)
+{
+  double * rect;
+  double ox,oy;     /* X and Y offset to coordinates 0,0 in out image */
+  double dx,dy,x_sample,y_sample;
+  int x,y;
+
+  /* get memory */
+  rect = (double *) xmalloc( XX * YY * sizeof(double) );
+
+  /* extract rectangle */
+  ox = XX%2==0 ? XX/2 - 0.5 : XX/2;
+  oy = YY%2==0 ? YY/2 - 0.5 : YY/2;
+  dx = step * cos(theta);
+  dy = step * sin(theta);
+  for(x=0; x<XX; x++)
+    for(y=0; y<YY; y++)
+      {
+        x_sample = xc + dx * (x - ox) - dy * (y - oy);
+        y_sample = yc + dy * (x - ox) + dx * (y - oy);
+        rect[x+y*XX] = interpolation(image,X,Y,x_sample,y_sample);
+      }
+
+  return rect;
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+ * @brief Compute the image gradient orientation.
+ * @authors Rafael Grompone von Gioi, Mariano Rodríguez
+ */
+double * gradient_angle(double * image, int X, int Y, double ** modgrad)
+{
+  double * grad_angle;
+  double * grad_mod;
+  double dx,dy;
+  int x,y;
+
+  /* get memory */
+  grad_angle = (double *) xmalloc( X * Y * sizeof(double) );
+  grad_mod   = (double *) xmalloc( X * Y * sizeof(double) );
+
+  /* edges have not gradient defined */
+  for(x=0; x<X; x++) grad_angle[x+0*X] = grad_angle[x+(Y-1)*X] = NOTDEF;
+  for(y=0; y<Y; y++) grad_angle[0+y*X] = grad_angle[X-1+y*X]   = NOTDEF;
+  for(x=0; x<X; x++) grad_mod[x+0*X]   = grad_mod[x+(Y-1)*X]   = 0.0;
+  for(y=0; y<Y; y++) grad_mod[0+y*X]   = grad_mod[X-1+y*X]     = 0.0;
+
+  /* process */
+  for(x=1; x<X-1; x++)
+    for(y=1; y<Y-1; y++)
+      {
+        dx = 0.5 * (image[(x+1)+y*X] - image[(x-1)+y*X]);
+        dy = 0.5 * (image[x+(y+1)*X] - image[x+(y-1)*X]);
+
+        grad_mod[x+y*X] = sqrt(dx*dx + dy*dy);
+
+        if((image[(x+1)+y*X]==NOTDEF)||(image[(x-1)+y*X]==NOTDEF)||(image[x+(y+1)*X]==NOTDEF)||(image[x+(y-1)*X]==NOTDEF))
+        {
+            grad_angle[x+y*X] = NOTDEF;
+            grad_mod[x+y*X] = 0;
+        }
+        else
+        if( grad_mod[x+y*X] < 3.0 ) grad_angle[x+y*X] = NOTDEF;
+        //if( grad_mod[x+y*X] == (double)0 ) grad_angle[x+y*X] = NOTDEF;
+        else
+                grad_angle[x+y*X] = atan2(dy,dx);
+      }
+
+  /* return values */
+  *modgrad = grad_mod;
+  return grad_angle;
+}
+
+
+/*----------------------------------------------------------------------------*/
+/**
+ * @brief grad
+ * @param grad_mod
+ * @param x
+ * @param y
+ * @param theta
+ * @param sigma
+ * @param blur
+ * @param XX
+ * @param YY
+ * @param X
+ * @param Y
+ * @param key
+ * @param radius
+ * @param par
+ * @return
+ * @author Rafael Grompone von Gioi
+ */
+double * grad( double ** grad_mod, double x, double y, double theta, double sigma,float * blur, int XX, int YY, int X, int Y, keypoint& key, float & radius, siftPar &par)
+{
+  double step = sigma*par.OriSigma;//or InitSigma
+  if (step_sigma>0)
+    step = step_sigma*sigma;
+  double * patch;
+  double * grad_angle;
+
+  patch = extract_rectangle(blur,XX,YY,x,y,theta,step,X,Y);
+  grad_angle = gradient_angle(patch,X,Y,grad_mod);
+
+  free( (void *) patch );
+  return grad_angle;
+}
+
+
+void UpdateKeypoint_AC(
+        flimage & blur,
+        keypoint & key,
+        float scale, float row, float col,siftPar &par)
+{
+    key.gradangle = grad( &key.gradmod ,col,row,key.angle,scale,blur.getPlane(),blur.nwidth(),blur.nheight(),NewOriSize1,NewOriSize1 ,key, key.radius, par);
+    key.octscale = scale;
+    key.octcol = col;
+    key.octrow = row;
+}
+
+#endif
 
 
 
@@ -124,7 +311,7 @@ void InterpKeyPoint(flimage& blur,
                     const flimage& grad, const flimage& ori, flimage& map,
                     float octSize, keypointslist& keys, int movesRemain, siftPar &par);
 
-void AssignOriHist(const flimage& blur,
+void AssignOriHist(flimage& blur,
                    const flimage& grad, const flimage& ori, float octSize,
                    float octScale, float octRow, float octCol, keypointslist& keys, siftPar &par);
 
@@ -134,7 +321,7 @@ void SmoothHistogram(
 float InterpPeak(
         float a, float b, float c);
 
-void MakeKeypoint(const flimage& blur,
+void MakeKeypoint(flimage& blur,
                   const flimage& grad, const flimage& ori, float octSize, float octScale,
                   float octRow, float octCol, float angle, keypointslist& keys, siftPar &par);
 
@@ -700,7 +887,7 @@ float FitQuadratic(float offset[3], flimage* dogs, int s, int r, int c)
    region.  The histogram is smoothed and the largest peak selected.
    The results are in the range of -PI to PI.
 */
-void AssignOriHist(const flimage& blur,
+void AssignOriHist(flimage& blur,
                    const flimage& grad, const flimage& ori, float octSize,
                    float octScale, float octRow, float octCol, keypointslist& keys, siftPar &par)
 {
@@ -832,7 +1019,7 @@ float InterpPeak(float a, float b, float c)
 
    Modified by Mariano Rodríguez to obtain HALF-SIFT
  */
-void MakeKeypoint(const flimage& blur,
+void MakeKeypoint(flimage& blur,
                   const flimage& grad, const flimage& ori, float octSize, float octScale,
                   float octRow, float octCol, float angle, keypointslist& keys,siftPar &par)
 {
@@ -974,6 +1161,10 @@ void MakeKeypoint(const flimage& blur,
         newkeypoint.scale = octSize * octScale;	/* scale */
         newkeypoint.angle = angle;		/* orientation */
         MakeKeypointSample(newkeypoint,grad,ori,octScale,octRow,octCol,par);
+#ifdef _ACD
+        if (desc_type == IMAS_AC || desc_type ==IMAS_AC_Q || desc_type == IMAS_AC_W)
+            UpdateKeypoint_AC(blur,newkeypoint,octScale,octRow,octCol,par);
+#endif
         if (newkeypoint.radius>0.0f)
             keys.push_back(newkeypoint);
     }

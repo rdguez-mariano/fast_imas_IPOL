@@ -16,7 +16,12 @@ Methods performing Image Matching by Affine Simulation (IMAS) attain affine inva
 - DAISY (only with OpenCV)
 - AKAZE (only with OpenCV)
 
-Depending on the SIIM, we propose an optimal set of affine simulations by following the article : [Covering the Space of Tilts](https://rdguez-mariano.github.io/pages/imas).
+Also, those descriptors and matchers introduced in [Affine invariant image comparison under repetitive structures](https://rdguez-mariano.github.io/pages/acdesc) are now available (but still unoptimised). They are:
+- AC
+- AC-Q
+- AC-W
+
+Depending on the SIIM, we propose optimal sets of affine simulations as in [Covering the Space of Tilts](https://rdguez-mariano.github.io/pages/imas).
 
 This version of IMAS is based on the concept of hyper-descriptors and their associated matchers. See [Fast Affine Invariant Image Matching](https://rdguez-mariano.github.io/pages/hyperdescriptors) for more information on this.
 
@@ -83,6 +88,9 @@ Input Arguments:
   - 9 -> FREAK
   - 10 -> LUCID
   - 13 -> AGAST
+  - 30 -> AC
+  - 31 -> AC-W
+  - 32 -> AC-Q
 * "-covering VALUE_C" Selects the near optimal covering to be used. Available choices are: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 and 2. **(1.7 by default)**
 * "-match_ratio VALUE_M" Sets the Nearest Neighbour Distance Ratio. VALUE_M is a real number between 0 and 1. **(0.6 for SURF and 0.8 for SIFT based)**
 * "-filter_precision VALUE_P" Sets the precision threshold for ORSA or USAC. VALUE_P is normally in terms of pixels. **(3 pixels for Fundamental and 10 pixels for Homography)**
@@ -121,6 +129,7 @@ This code comes with a doxygen documentation. It can be generated locally from t
 * **Mariano Rodríguez** - [web page](https://rdguez-mariano.github.io/)
 * **Julie Delon** - [web page](https://delon.wp.imt.fr/)
 * **Jean-Michel Morel** - [web page](https://sites.google.com/site/jeanmichelmorelcmlaenscachan/)
+* **Rafael Grompone Von Gioi**
 
 ## Contributors
 

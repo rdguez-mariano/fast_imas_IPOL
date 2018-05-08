@@ -42,6 +42,9 @@
 
 #ifdef _NO_OPENCV
     #define IMAS_HALFROOTSIFT 22
+    #define IMAS_AC 30              // Acontrario matcher
+    #define IMAS_AC_W 31            // Acontrario matcher with weights
+    #define IMAS_AC_Q 32            // Acontrario matcher quantised
 #else
     #define IMAS_BRISK 3
     #define IMAS_BRIEF 4

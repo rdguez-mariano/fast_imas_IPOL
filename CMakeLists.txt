@@ -5,11 +5,15 @@ ADD_SUBDIRECTORY(libMatch)
 ADD_SUBDIRECTORY(libNumerics)
 ADD_SUBDIRECTORY(libOrsa)
 
+set(OPENMP ON)
 
+if (OPENMP)
+message("************* OpenMP *************")
 FIND_PACKAGE(OpenMP)
 if (OPENMP_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif (OPENMP_FOUND)
+endif()
 
 IF(MSVC)
 ADD_DEFINITIONS(/arch:SSE2)
@@ -63,8 +67,8 @@ set(USAC ON)
 # OPENCV Control: ON -> Dont uses opencv ; OFF -> Uses opencv
 set(opencv OFF)
 
-
-
+# ACTIVATE AC Descriptors
+set(ACD ON)
 
 if (opencv)
     message("************* OPENCV Descriptors *************")
@@ -75,6 +79,12 @@ if (opencv)
 else()
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D _NO_OPENCV=1")
     message("************* Standalone Descriptors *************")
+
+    if (ACD)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D _ACD=1")
+        message("************* Including AC Descriptors *************")
+    endif()
+
     set(IMAS_srcs
         ${IMAS_srcs}
 

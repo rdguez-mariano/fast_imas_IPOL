@@ -390,6 +390,45 @@ std::string SetDetectorDescriptor(int DDIndex)
         sift_desc = true;
         break;
     }
+#ifdef _ACD
+    case IMAS_AC:
+    {
+        desc_name="AC";
+        desc_type = IMAS_AC;
+        binary_desc = false;
+        rooted = false;
+        default_radius = 1.7f;
+        sift_desc = true;
+        NewOriSize1 = 22;
+        step_sigma = 1.5;
+        break;
+    }
+    case IMAS_AC_W:
+    {
+        desc_name="AC-W";
+        desc_type = IMAS_AC_W;
+        binary_desc = false;
+        rooted = false;
+        default_radius = 1.7f;
+        sift_desc = true;
+        NewOriSize1 = 22;
+        step_sigma = 1.5;
+        break;
+    }
+    case IMAS_AC_Q:
+    {
+        desc_name="AC-Q";
+        desc_type = IMAS_AC_Q;
+        binary_desc = false;
+        rooted = false;
+        default_radius = 1.7f;
+        sift_desc = true;
+        NewOriSize1 = 18;
+        quant_prec = 0.032;
+        step_sigma = 1.5;
+        break;
+    }
+#endif
 #endif
     }
     updateparams();
@@ -1060,8 +1099,8 @@ float distance_imasKP(IMAS::IMAS_KeyPoint *k1,IMAS::IMAS_KeyPoint *k2, float& di
                 tdist = distance_sift(static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr),static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr),dist,tnorm==cv::NORM_L2);
             else
                 tdist = (float)cv::norm(*static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr),*static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr),tnorm);
-//#pragma omp critical
-//            cout<<tdist<<" "<<tdist1<<endl;
+            //#pragma omp critical
+            //            cout<<tdist<<" "<<tdist1<<endl;
             //tdist = opencv_distance(static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr));
 #else
             if (sift_desc)
@@ -1204,8 +1243,265 @@ float CheckForMatchIMAS_acontrario(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::I
 }
 
 
+#ifdef _ACD
+
+#ifndef FALSE
+#define FALSE 0
+#endif /* !FALSE */
+
+#ifndef TRUE
+#define TRUE 1
+#endif /* !TRUE */
+
+/*----------------------------------------------------------------------------*/
+/** PI */
+#ifndef M_PI
+#define M_PI   3.14159265358979323846
+#endif /* !M_PI */
+
+/*----------------------------------------------------------------------------*/
+/** max value */
+#define max(a,b) (((a)>(b))?(a):(b))
+
+/** min value */
+#define min(a,b) (((a)>(b))?(b):(a))
+
+/*----------------------------------------------------------------------------*/
+/**
+ * @brief Normalized angle difference between 'a' and the symmetric of 'b'
+    relative to a vertical axis.
+* @author Rafael Grompone von Gioi
+ */
+static inline double norm_angle(double a, double b)
+{
+    a -= b;
+    while( a <= -M_PI ) a += 2.0*M_PI;
+    while( a >   M_PI ) a -= 2.0*M_PI;
+
+    return fabs(a) / M_PI;
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+ * @brief Simple patch_comparison
+ * @param grad_angle1
+ * @param grad_angle2
+ * @param X
+ * @param Y
+ * @param logNT
+ * @return
+ * @author Rafael Grompone von Gioi, Mariano Rodríguez
+ */
+double patch_comparison( double * grad_angle1, double * grad_angle2,
+                         int X, int Y, double logNT )
+{
+    int n = 0;      /* count of angles compared */
+    double k = 0.0; /* measure of symmetric angles */
+    double logNFAC;
+
+    int nmax = (X-2)*(Y-2);
+    /* logNFAC-logNT <= 0 */
+    /* logNFAC-logNT = nmax * log10(k) - 0.5 * log10(2.0 * M_PI) - (nmax+0.5) * log10(nmax) + nmax * log10(exp(1.0)) */
+    double threshold = pow(10, (0.5 * log10(2.0 * M_PI) + (nmax+0.5) * log10(nmax) - nmax * log10(exp(1.0)))/nmax );
+    int x,y,A,B;
 
 
+    for(x=1; x<X-1; x++)
+        for(y=1; y<Y-1; y++)
+        {
+            A = grad_angle1[x+y*X] != NOTDEF;  /* A has defined gradient */
+            B = grad_angle2[x+y*X] != NOTDEF;  /* B has defined gradient */
+
+            /* if at least one of the corresponding pixels has defined gradient,
+           count it in the total number of pixels evaluated */
+            if( A || B ) ++n;
+
+            if( A && B) k += norm_angle(grad_angle1[x+y*X], grad_angle2[x+y*X]);
+            else if( (A && !B) || (!A && B) ) k += 1.0;
+
+            if (k>threshold)
+                return (logNT);
+        }
+
+    /* NFAC = NT * k^n / n!
+     log(n!) is bounded by Stirling's approximation:
+       n! >= sqrt(2pi) * n^(n+0.5) * exp(-n)
+     then, log10(NFA) <= log10(NT) + n*log10(k) - log10(latter expansion) */
+    logNFAC = logNT + n * log10(k)
+            - 0.5 * log10(2.0 * M_PI) - (n+0.5) * log10(n) + n * log10(exp(1.0));
+
+    return logNFAC;
+}
+
+double* weights;
+double sum_log_w;
+double threshold_AC;
+double sigma_default = -1.0;
+
+
+/**
+ * @brief create_weights_for_patch_comparison
+ * @param X
+ * @param Y
+ * @author Rafael Grompone von Gioi, Mariano Rodríguez
+ */
+void create_weights_for_patch_comparison(int X, int Y)
+{
+    sum_log_w = 0.0;
+    delete[] weights;
+    weights = new double[X*Y];
+    int r = (int) (X/2), c = (int) (Y/2);
+    double w;
+
+    for(int x=0; x<X*Y; x++)
+        weights[x] = NOTDEF;
+
+    for(int x=1; x<X-1; x++)
+        for(int y=1; y<Y-1; y++)
+        {
+            //w = exp( -(pow(r-x,2)+pow(c-y,2))/(2.0*X*sqrt(X)) );
+            if (sigma_default>0)
+                w = exp( -(pow(r-x,2)+pow(c-y,2))/(2.0*sigma_default) );
+            else
+                w = exp( -(pow(r-x,2)+pow(c-y,2))/(2.0*X*Y) );
+            weights[x+y*X] = w;
+            sum_log_w += log10(w);
+        }
+    int nmax = (X-2)*(Y-2);
+    /* logNFAC-logNT <= 0 */
+    /* logNFAC-logNT = nmax * log10(k) - 0.5 * log10(2.0 * M_PI) - (nmax+0.5) * log10(nmax) + nmax * log10(exp(1.0)) */
+    threshold_AC = pow(10, (sum_log_w + 0.5 * log10(2.0 * M_PI) + (nmax+0.5) * log10(nmax) - nmax * log10(exp(1.0)))/nmax );
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+ * @brief weighted_patch_comparison
+ * @param grad_angle1
+ * @param grad_angle2
+ * @param grad_mod1
+ * @param grad_mod2
+ * @param X
+ * @param Y
+ * @param logNT
+ * @return
+ * @author Rafael Grompone von Gioi, Mariano Rodríguez
+ */
+double weighted_patch_comparison( double * grad_angle1, double * grad_angle2,
+                                  double * grad_mod1,   double * grad_mod2,
+                                  int X, int Y, double logNT )
+{
+    int n = 0;      /* count of angles compared */
+    double k = 0.0; /* measure of symmetric angles */
+    double logNFAC;
+    int x,y;
+
+    for(x=1; x<X-1; x++)
+        for(y=1; y<Y-1; y++)
+        {
+            double a = grad_angle1[x+y*X];
+            double b = grad_angle2[x+y*X];
+            int A = (a != NOTDEF);  /* A has defined gradient */
+            int B = (b != NOTDEF);  /* B has defined gradient */
+
+            /* if at least one of the corresponding pixels has defined gradient,
+           count it in the total number of pixels evaluated */
+            if( A || B )
+            {
+                ++n;
+                if( A && B) k += weights[x+y*X] * norm_angle(a,b);
+                else        k += weights[x+y*X];  /* one angle not defined, maximal error = 1 */
+            }
+
+            if (k>threshold_AC)
+                return (logNT);
+        }
+
+    /* NFAC = NT * k^n / (n! * prod_i w_i)
+     log(n!) is bounded by Stirling's approximation:
+       n! >= sqrt(2pi) * n^(n+0.5) * exp(-n)
+     then, log10(NFA) <= log10(NT) + n*log10(k) - log10(latter expansion) */
+    logNFAC = logNT + n * log10(k) - sum_log_w - 0.5 * log10(2.0 * M_PI) - (n+0.5) * log10(n) + n * log10(exp(1.0));
+
+    return logNFAC;
+}
+
+
+
+/*----------------------------------------------------------------------------*/
+/**
+ * @brief Computes log10( NT * B(n,k,p) ), where B(,,) is the tail of the binomial
+    distribution, and logNT is log10(NT); the value is estimated using
+    Hoeffding's inequality.
+ * @param logNT
+ * @param n
+ * @param k
+ * @param p
+ * @return
+ * @author Rafael Grompone von Gioi
+ */
+double nfa(double logNT, int n, int k, double p)
+{
+    double r = (double) k / (double) n;
+
+    if( r <= p ) return logNT;
+
+    double log_binom = k * log10(p/r) + n*(1-r) * log10( (1-p)/(1-r) );
+    return logNT + log_binom;
+}
+
+/**
+ * @brief quantised_patch_comparison
+ * @param grad_angle1
+ * @param grad_angle2
+ * @param grad_mod1
+ * @param grad_mod2
+ * @param X
+ * @param Y
+ * @param logNT
+ * @return
+ * @author Rafael Grompone von Gioi, Mariano Rodríguez
+ */
+double quantised_patch_comparison( double * grad_angle1, double * grad_angle2,
+                                   double * grad_mod1,   double * grad_mod2,
+                                   int X, int Y, double logNT )
+{
+    int n = 0;      /* count of angles compared */
+    int k = 0; /* measure of symmetric angles */
+    double logNFAC;
+    int x,y;
+
+
+    for(x=1; x<X-1; x++)
+        for(y=1; y<Y-1; y++)
+        {
+            double a = grad_angle1[x+y*X];
+            double b = grad_angle2[x+y*X];
+            int A = (a != NOTDEF);  /* A has defined gradient */
+            int B = (b != NOTDEF);  /* B has defined gradient */
+
+            /* if at least one of the corresponding pixels has defined gradient,
+           count it in the total number of pixels evaluated */
+            if( A || B ) //if( A || B )
+            {
+                ++n;
+
+                if(( A && B)&&(norm_angle(a,b)<quant_prec))
+                    k ++ ;
+                /* one angle not defined, maximal error = 1 */
+            }
+        }
+
+    /* NFAC = NT * k^n / (n! * prod_i w_i)
+     log(n!) is bounded by Stirling's approximation:
+       n! >= sqrt(2pi) * n^(n+0.5) * exp(-n)
+     then, log10(NFA) <= log10(NT) + n*log10(k) - log10(latter expansion) */
+
+    logNFAC = nfa(logNT,n,k,quant_prec);
+
+    return logNFAC;
+}
+
+#endif
 
 
 /**
@@ -1229,7 +1525,9 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
     float	minratio, sqratio;
 
     minratio = nndrRatio;
-
+#ifdef _ACD
+    if (!(desc_type == IMAS_AC || desc_type ==IMAS_AC_Q || desc_type == IMAS_AC_W))
+#endif
     {
 #pragma omp parallel for
         for (int i=0; i< (int) keys1.size(); i++)
@@ -1272,6 +1570,102 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
             }
         }
     }
+#ifdef _ACD
+    else
+    {
+        if(desc_type==IMAS_AC_W)
+            create_weights_for_patch_comparison(NewOriSize1, NewOriSize1);
+        int X1 = w1, Y1 = h1, X2 = w2, Y2 = h2;
+        double logNT;
+        logNT = 1.5*log10(X1) + 1.5*log10(Y1)
+                + 1.5*log10(X2) + 1.5*log10(Y2)
+                + log10( log( 2.0 * max(X1,Y1) ) / log(2.0) )
+                + log10( log( 2.0 * max(X2,Y2) ) / log(2.0) )
+                + 2.0*log10(_arearatio);
+
+#pragma omp parallel for
+        for (int n1=0; n1< (int) keys1.size(); n1++)
+            for (int n2=0; n2< (int) keys2.size(); n2++)
+            {
+                IMAS::IMAS_KeyPoint *k1, *k2;
+                k1 = keys1[n1];
+                k2 = keys2[n2];
+                int ind1 = -1, ind2 = -1;
+                double bestlogNFA = logNT, logNFA = 1000.0;
+                for(int i1=0;i1<(int)k1->KPvec.size();i1++)
+                    for(int i2=0;i2<(int)k2->KPvec.size();i2++)
+                    {
+
+                        switch (desc_type) {
+                        case IMAS_AC: // without weights
+                        {
+                            logNFA = patch_comparison(
+                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradangle,
+                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradangle,
+                                        NewOriSize1,NewOriSize1,logNT);
+                            break;
+                        }
+                        case IMAS_AC_W: //weighted
+                        {
+                            logNFA = weighted_patch_comparison(
+                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradangle,
+                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradangle,
+                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradmod,
+                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradmod,
+                                        NewOriSize1,NewOriSize1,logNT);
+                            break;
+                        }
+                        case IMAS_AC_Q: //quantised
+                        {
+                            logNFA = quantised_patch_comparison(
+                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradangle,
+                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradangle,
+                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradmod,
+                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradmod,
+                                        NewOriSize1,NewOriSize1,logNT);
+                            break;
+                        }
+
+                        }
+
+                        if ( (0>logNFA) && (bestlogNFA>logNFA) )
+                        {
+                            ind1 = i1;
+                            ind2 = i2;
+                            bestlogNFA = logNFA;
+                        }
+                    }
+
+                if (bestlogNFA<0)
+                {
+                    {
+                        keypoint_simple k1, k2;
+
+                        k1.x = keys1[n1]->KPvec[ind1].pt.x;
+                        k1.y = keys1[n1]->KPvec[ind1].pt.y;
+                        k1.scale = keys1[n1]->KPvec[ind1].scale;
+                        k1.angle = keys1[n1]->KPvec[ind1].angle;
+                        k1.theta = keys1[n1]->KPvec[ind1].theta;
+                        k1.t = keys1[n1]->KPvec[ind1].t;
+                        k1.size = keys1[n1]->KPvec[ind1].size;
+
+                        k2.x = keys2[n2]->KPvec[ind2].pt.x;
+                        k2.y = keys2[n2]->KPvec[ind2].pt.y;
+                        k2.scale = keys2[n2]->KPvec[ind2].scale;
+                        k2.angle = keys2[n2]->KPvec[ind2].angle;
+                        k2.theta = keys2[n2]->KPvec[ind2].theta;
+                        k2.t = keys2[n2]->KPvec[ind2].t;
+                        k2.size = keys2[n2]->KPvec[ind2].size;
+
+
+#pragma omp critical
+                        matchings.push_back( matching(k1,k2) );
+                    }
+
+                }
+            }
+    }
+#endif
     my_Printf("   %d possible matches have been found. \n", (int) matchings.size());
     my_Printf("IMAS-Matcher accomplished in %.2f seconds.\n \n", (IMAS::IMAS_getTickCount() - tstart)/ IMAS::IMAS_getTickFrequency());
 
