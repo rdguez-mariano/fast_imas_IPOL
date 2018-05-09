@@ -120,6 +120,11 @@ For example, suppose we have two images (adam1.png and adam2.png) on which we wa
 Additionally, if an underlying homography has been identified by ORSA or USAC, then:
 * **"panorama.png"**. Shows the query image, transformed by this homography, on target image.
 
+
+## IMAS on MATLAB
+These methods are available in MATLAB through MEX. The connection is done by `IMAS_matlab.cpp`. A MATLAB function, `perform_IMAS.m`, reachable at [imas_analytics](https://github.com/rdguez-mariano/imas_analytics), is provided to automatically handle compilation and calls to the MEX function.
+
+
 ## Developer Documentation
 This code comes with a doxygen documentation. It can be generated locally from the source code. You might choose to use its graphical front-end: [Doxywizard](https://www.stack.nl/~dimitri/doxygen/manual/doxywizard_usage.html).
 
