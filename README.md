@@ -25,11 +25,11 @@ Depending on the SIIM, we propose optimal sets of affine simulations as in [Cove
 
 This version of IMAS is based on the concept of hyper-descriptors and their associated matchers. See [Fast Affine Invariant Image Matching](https://rdguez-mariano.github.io/pages/hyperdescriptors) for more information on this.
 
-## Testing this work right away
+## Online demo
 
-This work has been published on the Image Processing OnLine (IPOL) Journal. You can test it online with your own images on this link: [IPOL demo](http://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000011).
+Some of these methods are available online at [IPOL](http://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000011) for you to test with your own images.
 
-*Remark:* The IPOL Journal does not accept OpenCV. So those descriptors only proposed by OpenCV are not available online. On the other hand, USAC is available !
+*Remark:* The IPOL Journal does not accept OpenCV. So those descriptors only proposed by OpenCV are not available online. Neither are those descriptors and matchers proposed in [ICIP 2018](https://rdguez-mariano.github.io/pages/acdesc). On the other hand, USAC is available !
 
 ## Prerequisites
 This source code is standalone, although there are two optional capabilities (OpenCV 3.2.0 and the USAC Filter) that require external libraries. If any compilation error arises, is probably due to some missing external libraries.
