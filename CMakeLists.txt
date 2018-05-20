@@ -70,6 +70,10 @@ set(opencv OFF)
 # ACTIVATE AC Descriptors
 set(ACD ON)
 
+# ACTIVATE LDAHASH
+set(LDAHASH ON)
+
+
 if (opencv)
     message("************* OPENCV Descriptors *************")
     set (OpenCV_DIR "/home/rdguez-mariano/Sources/opencv_3.2.0/share/OpenCV")
@@ -95,6 +99,18 @@ else()
         #SIFT
         libLocalDesc/sift/demo_lib_sift.cpp
         )
+
+    if (LDAHASH)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D _LDAHASH=1")
+        message("************* Including LDAHASH Descriptors *************")
+        set(IMAS_srcs
+            ${IMAS_srcs}
+            #SIFT
+            libLocalDesc/ldahash/lib_ldahash.cpp
+            )
+
+    endif()
+
 endif()
 
 if (USAC)
