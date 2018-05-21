@@ -35,6 +35,10 @@
 #endif
 
 
+#ifdef _LDAHASH
+#include "libLocalDesc/ldahash/lib_ldahash.h"
+#endif
+
 
 #define BIG_NUMBER_L1 2800.0f
 #define BIG_NUMBER_L2 1000000000000.0f
@@ -429,6 +433,56 @@ std::string SetDetectorDescriptor(int DDIndex)
         break;
     }
 #endif
+#ifdef _LDAHASH
+    case IMAS_DIF128:
+    {
+        desc_name="DIF128";
+        nndrRatio = 0.625f;
+        desc_type = IMAS_DIF128;
+        binary_desc = true;
+        default_radius = 1.7f;
+        rooted = false;
+        sift_desc = true;
+        normType = IMAS::NORM_HAMMING;
+        break;
+    }
+    case IMAS_DIF64:
+    {
+        desc_name="DIF64";
+        nndrRatio = 0.625f;
+        desc_type = IMAS_DIF64;
+        binary_desc = true;
+        default_radius = 1.7f;
+        rooted = false;
+        sift_desc = true;
+        normType = IMAS::NORM_HAMMING;
+        break;
+    }
+    case IMAS_LDA128:
+    {
+        desc_name="LDA128";
+        nndrRatio = 0.625f;
+        desc_type = IMAS_LDA128;
+        binary_desc = true;
+        default_radius = 1.7f;
+        rooted = false;
+        sift_desc = true;
+        normType = IMAS::NORM_HAMMING;
+        break;
+    }
+    case IMAS_LDA64:
+    {
+        desc_name="LDA64";
+        nndrRatio = 0.625f;
+        desc_type = IMAS_LDA64;
+        binary_desc = true;
+        default_radius = 1.7f;
+        rooted = false;
+        sift_desc = true;
+        normType = IMAS::NORM_HAMMING;
+        break;
+    }
+#endif
 #endif
     }
     updateparams();
@@ -619,7 +673,15 @@ void compute_local_descriptor_keypoints(IMAS::IMAS_Matrix &queryImg,  IMAS_keypo
             {
                 KPs[i].pt.x = (*keys)[i].x;
                 KPs[i].pt.y = (*keys)[i].y;
+
+#ifdef _LDAHASH
+                if (desc_type>=41 && desc_type<=44)
+                    KPs[i].pt.kp_ptr = lda_describe_from_SIFT( (*keys)[i], desc_type);
+                else
+                    KPs[i].pt.kp_ptr = &((*keys)[i]);
+#else
                 KPs[i].pt.kp_ptr = &((*keys)[i]);
+#endif
                 KPs[i].size = (*keys)[i].radius;
                 KPs[i].scale = (*keys)[i].scale;
                 KPs[i].angle = (*keys)[i].angle;
@@ -1104,7 +1166,14 @@ float distance_imasKP(IMAS::IMAS_KeyPoint *k1,IMAS::IMAS_KeyPoint *k2, float& di
             //tdist = opencv_distance(static_cast<IMAS::IMAS_Matrix*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<IMAS::IMAS_Matrix*>(k2->KPvec[i2].pt.kp_ptr));
 #else
             if (sift_desc)
+#ifdef _LDAHASH
+                if (desc_type>=41 && desc_type<=44)
+                    tdist = lda_hamming_distance(static_cast<ldadescriptor*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<ldadescriptor*>(k2->KPvec[i2].pt.kp_ptr), dist);
+                else
+                    tdist = distance_sift(static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr), dist, tnorm==IMAS::NORM_L2);
+#else
                 tdist = distance_sift(static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr), dist, tnorm==IMAS::NORM_L2);
+#endif
             else
                 if (static_cast<descriptor*>(k1->KPvec[i1].pt.kp_ptr)->kP->signLaplacian==static_cast<descriptor*>(k2->KPvec[i2].pt.kp_ptr)->kP->signLaplacian)
                     tdist = euclideanDistance(static_cast<descriptor*>(k1->KPvec[i1].pt.kp_ptr) , static_cast<descriptor*>(k2->KPvec[i2].pt.kp_ptr));

@@ -33,7 +33,6 @@
 
 #include <vector>
 
-
 #define IMAS_SIFT 1
 #define IMAS_SURF 2
 #define IMAS_ROOTSIFT 11
@@ -152,6 +151,7 @@ struct IMAS_KeyPoint
 
 const int NORM_L1 = 1;
 const int NORM_L2 = 2;
+const int NORM_HAMMING = 3;
 
 }
 

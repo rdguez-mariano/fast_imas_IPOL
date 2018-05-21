@@ -1,4 +1,3 @@
-
 /***************************************************************************
  *   Copyright (C) 2010 by Christoph Strecha   *
  *   christoph.strecha@epfl.ch   *
@@ -47,7 +46,7 @@ void sseg_matrix_vector_mul(const float* A, int ar, int ac, int ald, const float
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ldadescriptor* describe_from_SIFT(keypoint & siftdesc, int method)
+ldadescriptor* lda_describe_from_SIFT(keypoint & siftdesc, int method)
 {
 
     assert(siftdesc.veclength==128);
@@ -143,14 +142,15 @@ ldadescriptor* describe_from_SIFT(keypoint & siftdesc, int method)
 
 
 
-float hamming_distance(ldadescriptor *k1,ldadescriptor *k2, float tdist)
+float lda_hamming_distance(ldadescriptor *k1,ldadescriptor *k2, float tdist)
 {
     int nrDim = k1->get_dim();
 
-    unsigned dist = __builtin_popcountll(k2->ldadesc[0] ^ k1->ldadesc[0]);
+    float dist = __builtin_popcountll(k2->ldadesc[0] ^ k1->ldadesc[0]);
     for(int j = 1; (j < nrDim)&&(dist<tdist); j++)
     {
         dist += __builtin_popcountll(k2->ldadesc[j] ^ k1->ldadesc[j]);
     }
+    return(dist);
 }
 
