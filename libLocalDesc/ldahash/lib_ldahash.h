@@ -1,8 +1,10 @@
-
-/***************************************************************************
- *   Copyright (C) 2010 by Christoph Strecha   *
- *   christoph.strecha@epfl.ch   *
- ***************************************************************************/
+/**
+  * @file lib_ldahash.h
+  * @author Mariano Rodríguez
+  * @date 2018
+  * @brief The IMAS algorithm implementation.
+  * @warning This code was extracted and modified from https://cvlab.epfl.ch/research/detect/ldahash. Copyright (C) 2010 by Christoph Strecha
+  */
 
 #ifndef _LIB_LDAHASH_H
 #define _LIB_LDAHASH_H
@@ -26,17 +28,12 @@ struct ldadescriptor
 {
 BIN_WORD* ldadesc; //array
 keypoint* sift_desc; //pointer
-ldadescriptor(int nrdim, int method)
+ldadescriptor(int nrdim, int method):dim(nrdim),method_id(method)
 {
-    dim = nrdim;
     ldadesc = new BIN_WORD[nrdim];
-    method_id = method;
 }
-int get_method_id() {return(method_id);}
-int get_dim(){return(dim);}
-private:
-int dim;
-int method_id;
+const int dim;
+const int method_id;
 };
 
 

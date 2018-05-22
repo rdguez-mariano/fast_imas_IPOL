@@ -1,7 +1,10 @@
-/***************************************************************************
- *   Copyright (C) 2010 by Christoph Strecha   *
- *   christoph.strecha@epfl.ch   *
- ***************************************************************************/
+/**
+  * @file lib_ldahash.cpp
+  * @author Mariano Rodríguez
+  * @date 2018
+  * @brief The IMAS algorithm implementation.
+  * @warning This code was extracted and modified from https://cvlab.epfl.ch/research/detect/ldahash. Copyright (C) 2010 by Christoph Strecha
+  */
 
 #include "lib_ldahash.h"
 
@@ -144,10 +147,8 @@ ldadescriptor* lda_describe_from_SIFT(keypoint & siftdesc, int method)
 
 float lda_hamming_distance(ldadescriptor *k1,ldadescriptor *k2, float tdist)
 {
-    int nrDim = k1->get_dim();
-
     float dist = __builtin_popcountll(k2->ldadesc[0] ^ k1->ldadesc[0]);
-    for(int j = 1; (j < nrDim)&&(dist<tdist); j++)
+    for(int j = 1; (j < k1->dim)&&(dist<tdist); j++)
     {
         dist += __builtin_popcountll(k2->ldadesc[j] ^ k1->ldadesc[j]);
     }
