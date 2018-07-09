@@ -121,6 +121,7 @@ For example, suppose we have two images (adam1.png and adam2.png) on which we wa
 In order to read geospatial data please use the following flags:
 * "-im1_gdal PATH/im1.tif XOff YOff XSize YSize" Selects a patch from im1.tif as the query input image.
 * "-im2_gdal PATH/im2.tif XOff YOff XSize YSize" Selects a patch from im2.tif as the target input image.
+
 where  (XOff, YOff) are the coordinates of the top left corner of a patch whose width and height are respectively XSize and YSize.
 
 ***Remark:*** Use these flags instead of "-im1" and/or "-im2".
