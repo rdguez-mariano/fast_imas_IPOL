@@ -73,6 +73,9 @@ set(ACD ON)
 # ACTIVATE LDAHASH
 set(LDAHASH ON)
 
+# ACTIVATE GDAL
+set(GDAL ON)
+
 
 if (opencv)
     message("************* OPENCV Descriptors *************")
@@ -148,3 +151,11 @@ if (opencv)
 endif()
 
 TARGET_LINK_LIBRARIES(main png zlib Match Numerics)
+
+if (GDAL)
+    find_package( GDAL )
+    include_directories( ${GDAL_INCLUDE_DIRS} )
+    message("************* Including GDAL *************")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D _GDAL=1")
+    TARGET_LINK_LIBRARIES(main gdal)
+endif()

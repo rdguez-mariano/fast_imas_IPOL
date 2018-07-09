@@ -17,7 +17,10 @@
 #include "libNumerics/numerics.h"
 #include "library.h"
 
-
+#ifdef _GDAL
+#include <gdal/gdal.h>
+#include <gdal/cpl_conv.h>
+#endif
 
 void invert_contrast(std::vector<float>& image,int w, int h)
 {    for (int i=0;i<h;i++)
@@ -72,7 +75,7 @@ void panorama(std::vector<float>& I1,int w1, int h1,std::vector<float>& I2, int 
     I.resize(h*w);
 
     for (int i =0; i<w*h;i++)
-      I[i] = 255;
+        I[i] = 255;
 
     H = H.inv(); // Pull from image I1
     for(int i=0; i<h; i++)
@@ -95,8 +98,8 @@ void panorama(std::vector<float>& I1,int w1, int h1,std::vector<float>& I2, int 
         }
 
     float * rgb = new float[w*h];
-        for(int i = 0; i < (int) h*w; i++)
-                rgb[i] = I[i];
+    for(int i = 0; i < (int) h*w; i++)
+        rgb[i] = I[i];
 
     write_png_f32("panorama.png", rgb, w, h, 1);
 }
@@ -136,24 +139,24 @@ void write_example_parallelograms(std::vector<float>& ipixels1,int w1, int h1,st
         for(int c=0;c<3;c++)
         {
             value =  (float)(rand() % 150 + 50);
-                /* DRAWING RICH KEYPOINTS */
-                //draw_line(opixelsIMAS_rich[c],  round(matchings[i].first.x), round(matchings[i].first.y), round(matchings[i].second.x), round(matchings[i].second.y) + h1 + band_w, colorlines[c], wo, ho);
-                draw_square_affine(opixelsIMAS_rich[c],wo,ho, matchings[i].x, matchings[i].y, matchings[i].angle, matchings[i].scale, matchings[i].t, 1.0f, matchings[i].theta*M_PI/180, value);//colordesc[c]
+            /* DRAWING RICH KEYPOINTS */
+            //draw_line(opixelsIMAS_rich[c],  round(matchings[i].first.x), round(matchings[i].first.y), round(matchings[i].second.x), round(matchings[i].second.y) + h1 + band_w, colorlines[c], wo, ho);
+            draw_square_affine(opixelsIMAS_rich[c],wo,ho, matchings[i].x, matchings[i].y, matchings[i].angle, matchings[i].scale, matchings[i].t, 1.0f, matchings[i].theta*M_PI/180, value);//colordesc[c]
 
 
-                draw_square(opixelsIMAS_rich[c],10+5*i,10,2,2,value,w1,h1);
+            draw_square(opixelsIMAS_rich[c],10+5*i,10,2,2,value,w1,h1);
 
-                int pointradius = 2;
-                int x = matchings[i].x, y = matchings[i].y;
-                for(int x0 = -pointradius; x0<=pointradius; x0++)
-                    for(int y0 = -pointradius; y0<=pointradius; y0++)
+            int pointradius = 2;
+            int x = matchings[i].x, y = matchings[i].y;
+            for(int x0 = -pointradius; x0<=pointradius; x0++)
+                for(int y0 = -pointradius; y0<=pointradius; y0++)
+                {
+                    if(sqrt(pow(x0,2)+pow(y0,2))<=pointradius)
                     {
-                        if(sqrt(pow(x0,2)+pow(y0,2))<=pointradius)
-                           {
-                            for(int c=0;c<3;c++)
-                                opixelsIMAS_rich[c][(y-y0)*wo+(x-x0)] = 0;
-                        }
+                        for(int c=0;c<3;c++)
+                            opixelsIMAS_rich[c][(y-y0)*wo+(x-x0)] = 0;
                     }
+                }
         }
     }
 
@@ -227,18 +230,18 @@ void write_images_matches(std::vector<float>& ipixels1,int w1, int h1,std::vecto
     for(int i=0; i < (int) matchings.size(); i++)
         for(int c=0;c<3;c++)
         {
-                /* DRAWING SQUARES */
-                value =  (float)(rand() % 150 + 50);
-                draw_line(opixelsIMAS[c],  round(matchings[i].first.x), round(matchings[i].first.y),
-                          round(matchings[i].second.x), round(matchings[i].second.y) + h1 + band_w, value, wo, ho);
+            /* DRAWING SQUARES */
+            value =  (float)(rand() % 150 + 50);
+            draw_line(opixelsIMAS[c],  round(matchings[i].first.x), round(matchings[i].first.y),
+                      round(matchings[i].second.x), round(matchings[i].second.y) + h1 + band_w, value, wo, ho);
 
-                draw_square(opixelsIMAS[c],  round(matchings[i].first.x)-sq, round(matchings[i].first.y)-sq, 2*sq, 2*sq, value, wo, ho);
-                draw_square(opixelsIMAS[c],  round(matchings[i].second.x)-sq, round(matchings[i].second.y) + h1 + band_w-sq, 2*sq, 2*sq, value, wo, ho);
+            draw_square(opixelsIMAS[c],  round(matchings[i].first.x)-sq, round(matchings[i].first.y)-sq, 2*sq, 2*sq, value, wo, ho);
+            draw_square(opixelsIMAS[c],  round(matchings[i].second.x)-sq, round(matchings[i].second.y) + h1 + band_w-sq, 2*sq, 2*sq, value, wo, ho);
 
-                /* DRAWING RICH KEYPOINTS */
-                //draw_line(opixelsIMAS_rich[c],  round(matchings[i].first.x), round(matchings[i].first.y), round(matchings[i].second.x), round(matchings[i].second.y) + h1 + band_w, colorlines[c], wo, ho);
-                draw_circle_affine(opixelsIMAS_rich[c],wo,ho, matchings[i].first.x, matchings[i].first.y, matchings[i].first.angle, matchings[i].first.scale, matchings[i].first.t, 1.0f, matchings[i].first.theta*M_PI/180, colordesc[c]);
-                draw_circle_affine(opixelsIMAS_rich[c],wo,ho, matchings[i].second.x, matchings[i].second.y + h1 + band_w, matchings[i].second.angle, matchings[i].second.scale, matchings[i].second.t, 1.0f, matchings[i].second.theta*M_PI/180, colordesc[c]);
+            /* DRAWING RICH KEYPOINTS */
+            //draw_line(opixelsIMAS_rich[c],  round(matchings[i].first.x), round(matchings[i].first.y), round(matchings[i].second.x), round(matchings[i].second.y) + h1 + band_w, colorlines[c], wo, ho);
+            draw_circle_affine(opixelsIMAS_rich[c],wo,ho, matchings[i].first.x, matchings[i].first.y, matchings[i].first.angle, matchings[i].first.scale, matchings[i].first.t, 1.0f, matchings[i].first.theta*M_PI/180, colordesc[c]);
+            draw_circle_affine(opixelsIMAS_rich[c],wo,ho, matchings[i].second.x, matchings[i].second.y + h1 + band_w, matchings[i].second.angle, matchings[i].second.scale, matchings[i].second.t, 1.0f, matchings[i].second.theta*M_PI/180, colordesc[c]);
         }
 
     float * rgb = new float[wo*ho*3];
@@ -351,73 +354,75 @@ void write_images_matches(std::vector<float>& ipixels1,int w1, int h1,std::vecto
  */
 void areazoom_image(vector<float>& ipixels, size_t& w1, size_t& h1, float areaS)
 {
-//float areaS = wS * hS;
+    //float areaS = wS * hS;
 
     float zoom1=0;
     int wS1=0, hS1=0;
     vector<float> ipixels_temp(ipixels);
-        float InitSigma_aa = 1.6;
+    float InitSigma_aa = 1.6;
 
 
-        float fproj_p, fproj_bg;
-        char fproj_i;
-        float *fproj_x4, *fproj_y4;
-        int fproj_o;
+    float fproj_p, fproj_bg;
+    char fproj_i;
+    float *fproj_x4, *fproj_y4;
+    int fproj_o;
 
-        fproj_o = 3;
-        fproj_p = 0;
-        fproj_i = 0;
-        fproj_bg = 0;
-        fproj_x4 = 0;
-        fproj_y4 = 0;
+    fproj_o = 3;
+    fproj_p = 0;
+    fproj_i = 0;
+    fproj_bg = 0;
+    fproj_x4 = 0;
+    fproj_y4 = 0;
 
 
 
-        // Resize image 1
-        float area1 = w1 * h1;
-        zoom1 = sqrt(area1/areaS);
+    // Resize image 1
+    float area1 = w1 * h1;
+    zoom1 = sqrt(area1/areaS);
 
-        wS1 = (int) (w1 / zoom1);
-        hS1 = (int) (h1 / zoom1);
+    wS1 = (int) (w1 / zoom1);
+    hS1 = (int) (h1 / zoom1);
 
-        int fproj_sx = wS1;
-        int fproj_sy = hS1;
+    int fproj_sx = wS1;
+    int fproj_sy = hS1;
 
-        float fproj_x1 = 0;
-        float fproj_y1 = 0;
-        float fproj_x2 = wS1;
-        float fproj_y2 = 0;
-        float fproj_x3 = 0;
-        float fproj_y3 = hS1;
+    float fproj_x1 = 0;
+    float fproj_y1 = 0;
+    float fproj_x2 = wS1;
+    float fproj_y2 = 0;
+    float fproj_x3 = 0;
+    float fproj_y3 = hS1;
 
-        /* Anti-aliasing filtering along vertical direction */
-        if ( zoom1 > 1 )
-        {
-            float sigma_aa = InitSigma_aa * zoom1 / 2;
-            GaussianBlur1D(ipixels_temp,w1,h1,sigma_aa,1);
-            GaussianBlur1D(ipixels_temp,w1,h1,sigma_aa,0);
-        }
+    /* Anti-aliasing filtering along vertical direction */
+    if ( zoom1 > 1 )
+    {
+        float sigma_aa = InitSigma_aa * zoom1 / 2;
+        GaussianBlur1D(ipixels_temp,w1,h1,sigma_aa,1);
+        GaussianBlur1D(ipixels_temp,w1,h1,sigma_aa,0);
+    }
 
-        // simulate a tilt: subsample the image along the vertical axis by a factor of t.
-        ipixels.resize(wS1*hS1);
-        fproj (ipixels_temp, ipixels , w1, h1, &fproj_sx, &fproj_sy, &fproj_bg, &fproj_o, &fproj_p,
-               &fproj_i , fproj_x1 , fproj_y1 , fproj_x2 , fproj_y2 , fproj_x3 , fproj_y3, fproj_x4, fproj_y4);
+    // simulate a tilt: subsample the image along the vertical axis by a factor of t.
+    ipixels.resize(wS1*hS1);
+    fproj (ipixels_temp, ipixels , w1, h1, &fproj_sx, &fproj_sy, &fproj_bg, &fproj_o, &fproj_p,
+           &fproj_i , fproj_x1 , fproj_y1 , fproj_x2 , fproj_y2 , fproj_x3 , fproj_y3, fproj_x4, fproj_y4);
 
-        w1 = wS1;
-        h1 = hS1;
+    w1 = wS1;
+    h1 = hS1;
 }
 
 
 #include <map>
 #include <string>
 #include <iostream>
-enum StringValue { _wrongvalue,_im1, _im2,_im3,_max_keys_im3,_im3_only, _applyfilter, _IMAS_INDEX, _covering,_match_ratio, _filter_precision, _eigen_threshold, _tensor_eigen_threshold, _filter_radius, _fixed_area};
+enum StringValue { _wrongvalue,_im1, _im2,_im3,_max_keys_im3,_im3_only, _applyfilter, _IMAS_INDEX, _covering,_match_ratio, _filter_precision, _eigen_threshold, _tensor_eigen_threshold, _filter_radius, _fixed_area,_im1_gdal, _im2_gdal};
 static std::map<std::string, int> strmap;
 void buildmap()
 {
     strmap["wrongvalue"] = _wrongvalue;
     strmap["-im1"] = _im1;
     strmap["-im2"] = _im2;
+    strmap["-im1_gdal"] = _im1_gdal;
+    strmap["-im2_gdal"] = _im2_gdal;
     strmap["-im3"] = _im3;
     strmap["-max_keys_im3"] = _max_keys_im3;
     strmap["-im3_only"] = _im3_only;
@@ -489,6 +494,96 @@ void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,siz
             im2 = ipixels2;
             break;
         }
+        case _im1_gdal:
+        {
+#ifdef _GDAL
+            GDALDatasetH  hDataset;
+            GDALAllRegister();
+
+            hDataset = GDALOpen( argv[count++], GA_ReadOnly );
+
+//            int width = GDALGetRasterXSize(hDataset);
+//            int height = GDALGetRasterYSize(hDataset);
+            int bands = GDALGetRasterCount(hDataset);
+
+            int xoff = atoi(argv[count++]);//23000;
+            int yoff = atoi(argv[count++]);//5000;
+            w1 = atoi(argv[count++]);
+            h1 = atoi(argv[count]);
+
+
+            float * iarr1 = (float *) CPLMalloc(sizeof(float)*w1*h1*bands);
+            GDALDatasetRasterIO( hDataset, GF_Read,xoff,yoff, w1, h1,
+                                 iarr1, w1, h1, GDT_Float32,
+                                 bands, NULL, 0,0,0 );
+            GDALClose( hDataset );
+
+            //Normalise
+            float max = iarr1[0];
+            for (int i =1;i<w1*h1*bands;i++)
+                if (max<iarr1[i])
+                    max = iarr1[i];
+            for (int i =0;i<w1*h1*bands;i++)
+            {
+                iarr1[i] = 255.0*iarr1[i]/max;
+            }
+
+            im1 = *new vector<float>(iarr1, iarr1 + w1 * h1);
+
+            free(iarr1); /*memcheck*/
+#else
+     cerr<<"Error: CMAKE didn't include GDAL. Please turn on the proper flag in CMakeLists.txt"<<endl;
+     count = count+4;
+     w1=0;
+     h1=0;
+#endif
+            break;
+        }
+        case _im2_gdal:
+        {
+#ifdef _GDAL
+            GDALDatasetH  hDataset;
+            GDALAllRegister();
+
+            hDataset = GDALOpen( argv[count++], GA_ReadOnly );
+
+//            int width = GDALGetRasterXSize(hDataset);
+//            int height = GDALGetRasterYSize(hDataset);
+            int bands = GDALGetRasterCount(hDataset);
+
+            int xoff = atoi(argv[count++]);//23000;
+            int yoff = atoi(argv[count++]);//5000;
+            w2 = atoi(argv[count++]);
+            h2 = atoi(argv[count]);
+
+
+            float * iarr2 = (float *) CPLMalloc(sizeof(float)*w2*h2*bands);
+            GDALDatasetRasterIO( hDataset, GF_Read,xoff,yoff, w2, h2,
+                                 iarr2, w2, h2, GDT_Float32,
+                                 bands, NULL, 0,0,0 );
+            GDALClose( hDataset );
+
+            //Normalise
+            float max = iarr2[0];
+            for (int i =1;i<w2*h2*bands;i++)
+                if (max<iarr2[i])
+                    max = iarr2[i];
+            for (int i =0;i<w2*h2*bands;i++)
+            {
+                iarr2[i] = 255.0*iarr2[i]/max;
+            }
+
+            im2 = *new vector<float>(iarr2, iarr2 + w2 * h2);
+
+            free(iarr2); /*memcheck*/
+#else
+     cerr<<"Error: CMAKE didn't include GDAL. Please turn on the proper flag in CMakeLists.txt"<<endl;
+     count = count+4;
+     w2=0;
+     h2=0;
+#endif
+            break;
+        }
         case _filter_precision:
         {
             Filter_precision = atof(argv[count]);
@@ -537,28 +632,28 @@ void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,siz
         }
         case _covering:
         {
-             covering = atof(argv[count]);
-             break;
+            covering = atof(argv[count]);
+            break;
         }
         case _match_ratio:
         {
-             matchratio = atof(argv[count]);
-             break;
+            matchratio = atof(argv[count]);
+            break;
         }
         case _filter_radius:
         {
-             rho = atoi(argv[count]);
-             break;
+            rho = atoi(argv[count]);
+            break;
         }
         case _eigen_threshold:
         {
-             edge_thres = atof(argv[count]) / pow( 1 + atof(argv[count]) ,2);
-             break;
+            edge_thres = atof(argv[count]) / pow( 1 + atof(argv[count]) ,2);
+            break;
         }
         case _tensor_eigen_threshold:
         {
-             tensor_thres = atof(argv[count]) / pow( 1 + atof(argv[count]) ,2);
-             break;
+            tensor_thres = atof(argv[count]) / pow( 1 + atof(argv[count]) ,2);
+            break;
         }
         }
         count++;
@@ -635,7 +730,7 @@ int main(int argc, char **argv)
 #endif
 
     if ( ((int)w3>0)&&((int)h3>0) )
-    {    
+    {
         IMAS_time tstart = IMAS::IMAS_getTickCount();
         my_Printf("Computing A-contrario hyper-descriptors...\n");
         std::vector<float> stats3;

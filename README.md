@@ -57,6 +57,19 @@ Then be sure that the CMakeLists.txt file has the USAC flag set to ON (.e.g. `se
 ### Deactivating USAC
 Just be sure that the CMakeLists.txt file has the USAC flag set to OFF (.e.g. `set(USAC OFF)`).
 
+### Activating GDAL
+If you want to read geospatial data you'll need to install the [GDAL](http://www.gdal.org/) library first. On ubuntu you might want to type something like:
+
+```bash
+sudo add-apt-repository ppa:ubuntugis/ppa
+sudo apt-get update
+sudo apt-get install libgdal
+```
+
+### Deactivating GDAL
+Just be sure that the CMakeLists.txt file has the GDAL flag set to OFF (.e.g. `set(GDAL OFF)`).
+
+
 ## Compiling on Linux
 ```bash
 mkdir -p build && cd build && cmake .. && make
@@ -102,6 +115,20 @@ For example, suppose we have two images (adam1.png and adam2.png) on which we wa
 
 ```bash
 ./main -im1 adam1.png -im2 adam2.png -desc 11 -covering 1.4
+```
+
+### Reading Geospatial Data
+In order to read geospatial data please use the following flags:
+* "-im1_gdal PATH/im1.tif XOff YOff XSize YSize" Selects a patch from im1.tif as the query input image.
+* "-im2_gdal PATH/im2.tif XOff YOff XSize YSize" Selects a patch from im2.tif as the target input image.
+where  (XOff, YOff) are the coordinates of the top left corner of a patch whose width and height are respectively XSize and YSize.
+
+***Remark:*** Use these flags instead of "-im1" and/or "-im2".
+
+For example, the following code will use as query image an extracted 1000x1000 patch whose top-left corner lies on (23000, 5000).
+
+```bash
+./main -im1_gdal test.tif 23000 5000 1000 1000 -im2 adam2.png
 ```
 
 ### Output files
