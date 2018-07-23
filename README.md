@@ -16,6 +16,12 @@ Methods performing Image Matching by Affine Simulation (IMAS) attain affine inva
 - DAISY (only with OpenCV)
 - AKAZE (only with OpenCV)
 
+Some [LDAHash descriptors](https://cvlab.epfl.ch/research/detect/ldahash) are available. They are:
+- DIF128
+- LDA128
+- DIF64
+- LDA64
+
 Also, those descriptors and matchers introduced in [Affine invariant image comparison under repetitive structures](https://rdguez-mariano.github.io/pages/acdesc) are now available (but still unoptimised). They are:
 - AC
 - AC-Q
@@ -66,8 +72,19 @@ sudo apt-get update
 sudo apt-get install libgdal
 ```
 
+Then be sure that the CMakeLists.txt file has the GDAL flag set to ON (.e.g. `set(GDAL ON)`).
+
 ### Deactivating GDAL
 Just be sure that the CMakeLists.txt file has the GDAL flag set to OFF (.e.g. `set(GDAL OFF)`).
+
+
+
+### Activating LDAHash
+[LDAHash descriptors](https://cvlab.epfl.ch/research/detect/ldahash) are available by setting the LDAHash flag set to ON in the CMakeLists.txt file (.e.g. `set(LDAHASH ON)`).
+
+### Deactivating LDAHash
+Just be sure that the CMakeLists.txt file has the LDAHash flag set to OFF (.e.g. `set(LDAHASH OFF)`).
+
 
 
 ## Compiling on Linux
@@ -104,6 +121,10 @@ Input Arguments:
   - 30 -> AC
   - 31 -> AC-W
   - 32 -> AC-Q
+  - 41 -> DIF128
+  - 42 -> LDA128
+  - 43 -> DIF64
+  - 44 -> LDA64
 * "-covering VALUE_C" Selects the near optimal covering to be used. Available choices are: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 and 2. **(1.7 by default)**
 * "-match_ratio VALUE_M" Sets the Nearest Neighbour Distance Ratio. VALUE_M is a real number between 0 and 1. **(0.6 for SURF and 0.8 for SIFT based)**
 * "-filter_precision VALUE_P" Sets the precision threshold for ORSA or USAC. VALUE_P is normally in terms of pixels. **(3 pixels for Fundamental and 10 pixels for Homography)**
