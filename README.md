@@ -33,7 +33,7 @@ This version of IMAS is based on the concept of hyper-descriptors and their asso
 
 ## Online demo
 
-Some of these methods are available online at [IPOL](http://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000011) for you to test with your own images.
+Some of these methods are available online at [IPOL](https://ipolcore.ipol.im/demo/clientApp/demo.html?id=225) for you to test with your own images.
 
 *Remark:* The IPOL Journal does not accept OpenCV. So those descriptors only proposed by OpenCV are not available online. Neither are those descriptors and matchers proposed in [ICIP 2018](https://rdguez-mariano.github.io/pages/acdesc). On the other hand, USAC is available !
 
