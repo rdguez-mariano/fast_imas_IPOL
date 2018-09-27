@@ -68,13 +68,13 @@ set(USAC ON)
 set(opencv OFF)
 
 # ACTIVATE AC Descriptors
-set(ACD ON)
+set(ACD OFF)
 
 # ACTIVATE LDAHASH
 set(LDAHASH ON)
 
 # ACTIVATE GDAL
-set(GDAL ON)
+set(GDAL OFF)
 
 
 if (opencv)

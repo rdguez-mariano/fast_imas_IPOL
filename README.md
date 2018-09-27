@@ -130,7 +130,8 @@ Input Arguments:
 * "-filter_precision VALUE_P" Sets the precision threshold for ORSA or USAC. VALUE_P is normally in terms of pixels. **(3 pixels for Fundamental and 10 pixels for Homography)**
 * "-filter_radius rho" It tells IMAS to use rho-hyperdescriptors **(4 pixels by default)**.
 * "-fixed_area" Resizes input images to have areas of about 800*600. *This affects the position of matches and all output images*
-* "-bigpanorama" Allows to recreate a panorama with no restrictions on the output panorama image. *Wild homographies might cause big output panorama images.*
+* "-bigpanorama" Allows to recreate a panorama with no restrictions on size. The frame is computed automatically so as both target and the homography-transformed-query images fit in. *Wild homographies might cause big output panorama images.*
+* "-framewidth VALUE_W" Sets the frame width around the target image for the panorama visualisation. The argument "-bigpanorama" overrides this action.
 * "-eigen_threshold VALUE_ET" and "-tensor_eigen_threshold VALUE_TT" Controls thresholds for eliminating aberrant descriptors. **(Both set to 10 by default)**
 
 For example, suppose we have two images (adam1.png and adam2.png) on which we want to apply Optimal-Affine-RootSIFT with the near optimal covering of 1.4. This is obtained by typing on bash the following:
@@ -168,7 +169,7 @@ For example, the following code will use as query image an extracted 1000x1000 p
 
 
 Additionally, if an underlying homography has been identified by ORSA or USAC, then:
-* **"panorama.png"**. Shows the query image, transformed by this homography, on target image.
+* **"panorama.png"**. Shows the query image, transformed by this homography, on the target image.
 
 
 ## IMAS on MATLAB
@@ -194,7 +195,8 @@ This code comes with a doxygen documentation. It can be generated locally from t
 
 This project is licensed under the BSD License - see the [LICENSE](LICENSE) file for details
 
-## Acknowledgments
+## Acknowledgements
+
 This project :
 * was inspired by the [ASIFT Project](http://demo.ipol.im/demo/my_affine_sift/). Copyright (c) 2011, Guoshen Yu and Jean-Michel Morel / Distributed under the BSD license.
 * might be linked to two patents:
@@ -204,3 +206,7 @@ This project :
 * calls libSimuTilts (all but digital_tilt.cpp), libOrsa, libMatch and libNumerics. Copyright (C) 2007-2010, Lionel Moisan, distributed under the BSD license.
 * calls libSimuTilts/digital_tilt.cpp. Copyright (c) 2011, Guoshen Yu and Jean-Michel Morel / Distributed under the BSD license.
 * can optionally call libUSAC. Copyright (c) 2012 University of North Carolina at Chapel Hill / See its [web page](http://www.cs.unc.edu/~rraguram/usac/) to see their specific associated licence.
+
+## Github repository
+
+<https://github.com/rdguez-mariano/fast_imas_IPOL>

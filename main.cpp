@@ -22,6 +22,8 @@
 #include <gdal/cpl_conv.h>
 #endif
 
+float framewidth = 100;
+
 void invert_contrast(std::vector<float>& image,int w, int h)
 {    for (int i=0;i<h;i++)
         for (int j=0;j<w;j++)
@@ -53,7 +55,6 @@ void panorama(std::vector<float>& I1,int w1, int h1,std::vector<float>& I2, int 
     int h, w;
     libNumerics::matrix<float> v(3,1);
     float x0=0, y0=0, x1=(float)w2, y1=(float)h2;
-    float framewidth = 100;
 
     if (aroundI2)
     {
@@ -421,11 +422,10 @@ void areazoom_image(vector<float>& ipixels, size_t& w1, size_t& h1, float areaS)
     h1 = hS1;
 }
 
-
 #include <map>
 #include <string>
 #include <iostream>
-enum StringValue { _wrongvalue,_im1, _im2,_im3,_max_keys_im3,_im3_only, _applyfilter, _IMAS_INDEX, _covering,_match_ratio, _filter_precision, _eigen_threshold, _tensor_eigen_threshold, _filter_radius, _fixed_area,_im1_gdal, _im2_gdal, _bigpanorama};
+enum StringValue { _wrongvalue,_im1, _im2,_im3,_max_keys_im3,_im3_only, _applyfilter, _IMAS_INDEX, _covering,_match_ratio, _filter_precision, _eigen_threshold, _tensor_eigen_threshold, _filter_radius, _fixed_area,_im1_gdal, _im2_gdal, _bigpanorama, _framewidth};
 static std::map<std::string, int> strmap;
 void buildmap()
 {
@@ -447,6 +447,8 @@ void buildmap()
     strmap["-filter_radius"] = _filter_radius;
     strmap["-fixed_area"] = _fixed_area;
     strmap["-bigpanorama"] = _bigpanorama;
+    strmap["-framewidth"] = _framewidth;
+
 
 }
 
@@ -604,6 +606,11 @@ void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,siz
         case _filter_precision:
         {
             Filter_precision = atof(argv[count]);
+            break;
+        }
+        case _framewidth:
+        {
+            framewidth = atof(argv[count]);
             break;
         }
         case _applyfilter:
