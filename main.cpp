@@ -47,28 +47,39 @@ void growTo(float& x0, float& y0, float& x1, float& y1, float x, float y)
  * @brief Panorama Construction
  * @author Pascal Monasse, Mariano Rodríguez
  */
-void panorama(std::vector<float>& I1,int w1, int h1,std::vector<float>& I2, int w2, int h2, libNumerics::matrix<float> H)
+void panorama(std::vector<float>& I1,int w1, int h1,std::vector<float>& I2, int w2, int h2, libNumerics::matrix<float> H, bool aroundI2)
 {
     std::vector<float> I;
     int h, w;
     libNumerics::matrix<float> v(3,1);
     float x0=0, y0=0, x1=(float)w2, y1=(float)h2;
+    float framewidth = 100;
 
-    v(0,0)=0; v(1,0)=0; v(2,0)=1;
-    v=H*v; v/=v(2,0);
-    growTo(x0, y0, x1, y1, v(0,0), v(1,0));
+    if (aroundI2)
+    {
+        x0=-framewidth;
+        y0=-framewidth;
+        x1+=framewidth;
+        y1+=framewidth;
+    }
+    else
+    {
+        v(0,0)=0; v(1,0)=0; v(2,0)=1;
+        v=H*v; v/=v(2,0);
+        growTo(x0, y0, x1, y1, v(0,0), v(1,0));
 
-    v(0,0)=(float)w1; v(1,0)=0; v(2,0)=1;
-    v=H*v; v/=v(2,0);
-    growTo(x0, y0, x1, y1, v(0,0), v(1,0));
+        v(0,0)=(float)w1; v(1,0)=0; v(2,0)=1;
+        v=H*v; v/=v(2,0);
+        growTo(x0, y0, x1, y1, v(0,0), v(1,0));
 
-    v(0,0)=(float)w1; v(1,0)=(float)h1; v(2,0)=1;
-    v=H*v; v/=v(2,0);
-    growTo(x0, y0, x1, y1, v(0,0), v(1,0));
+        v(0,0)=(float)w1; v(1,0)=(float)h1; v(2,0)=1;
+        v=H*v; v/=v(2,0);
+        growTo(x0, y0, x1, y1, v(0,0), v(1,0));
 
-    v(0,0)=0; v(1,0)=(float)h1; v(2,0)=1;
-    v=H*v; v/=v(2,0);
-    growTo(x0, y0, x1, y1, v(0,0), v(1,0));
+        v(0,0)=0; v(1,0)=(float)h1; v(2,0)=1;
+        v=H*v; v/=v(2,0);
+        growTo(x0, y0, x1, y1, v(0,0), v(1,0));
+    }
 
     w = int(x1-x0);
     h = int(y1-y0);
@@ -414,7 +425,7 @@ void areazoom_image(vector<float>& ipixels, size_t& w1, size_t& h1, float areaS)
 #include <map>
 #include <string>
 #include <iostream>
-enum StringValue { _wrongvalue,_im1, _im2,_im3,_max_keys_im3,_im3_only, _applyfilter, _IMAS_INDEX, _covering,_match_ratio, _filter_precision, _eigen_threshold, _tensor_eigen_threshold, _filter_radius, _fixed_area,_im1_gdal, _im2_gdal};
+enum StringValue { _wrongvalue,_im1, _im2,_im3,_max_keys_im3,_im3_only, _applyfilter, _IMAS_INDEX, _covering,_match_ratio, _filter_precision, _eigen_threshold, _tensor_eigen_threshold, _filter_radius, _fixed_area,_im1_gdal, _im2_gdal, _bigpanorama};
 static std::map<std::string, int> strmap;
 void buildmap()
 {
@@ -435,10 +446,11 @@ void buildmap()
     strmap["-tensor_eigen_threshold"] = _tensor_eigen_threshold;
     strmap["-filter_radius"] = _filter_radius;
     strmap["-fixed_area"] = _fixed_area;
+    strmap["-bigpanorama"] = _bigpanorama;
 
 }
 
-void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,size_t& h1, std::vector<float>& im2,size_t& w2, size_t& h2,std::vector<float>& im3,size_t& w3, size_t& h3, int& applyfilter, int& IMAS_INDEX, float& covering,float& matchratio, float& edge_thres, float& tensor_thres, bool& fixed_area)
+void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,size_t& h1, std::vector<float>& im2,size_t& w2, size_t& h2,std::vector<float>& im3,size_t& w3, size_t& h3, int& applyfilter, int& IMAS_INDEX, float& covering,float& matchratio, float& edge_thres, float& tensor_thres, bool& fixed_area, bool& aroundI2)
 {
     int count = 1;
     buildmap();
@@ -456,6 +468,11 @@ void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,siz
         case _fixed_area:
         {
             fixed_area = true;
+            break;
+        }
+        case _bigpanorama:
+        {
+            aroundI2 = false;
             break;
         }
         case _im3:
@@ -668,8 +685,8 @@ int main(int argc, char **argv)
     float covering = -1.0f, matchratio = -1.0f, edge_thres = -1.0f, tensor_thres = -1.0f;
     std::vector<float> ipixels1,ipixels2,ipixels3;
     size_t w1=0,h1=0,w2=0,h2=0,w3=-1,h3=-1;
-    bool fixed_area = false;
-    get_arguments(argc,argv,ipixels1,w1,h1,ipixels2,w2,h2,ipixels3,w3,h3,applyfilter,IMAS_INDEX,covering,matchratio,edge_thres, tensor_thres, fixed_area);
+    bool fixed_area = false, aroundI2 = true;
+    get_arguments(argc,argv,ipixels1,w1,h1,ipixels2,w2,h2,ipixels3,w3,h3,applyfilter,IMAS_INDEX,covering,matchratio,edge_thres, tensor_thres, fixed_area,aroundI2);
 
     if(argc==1)
     {
@@ -761,7 +778,7 @@ int main(int argc, char **argv)
             for(int j=0; j<3; j++)
                 H(i,j) = (float) H1(i,j);
 
-        panorama(ipixels1,(int) w1, (int) h1, ipixels2, (int) w2, (int) h2, H);
+        panorama(ipixels1,(int) w1, (int) h1, ipixels2, (int) w2, (int) h2, H, aroundI2);
     }
 
     //Output file "data_matches.csv"

@@ -130,6 +130,7 @@ Input Arguments:
 * "-filter_precision VALUE_P" Sets the precision threshold for ORSA or USAC. VALUE_P is normally in terms of pixels. **(3 pixels for Fundamental and 10 pixels for Homography)**
 * "-filter_radius rho" It tells IMAS to use rho-hyperdescriptors **(4 pixels by default)**.
 * "-fixed_area" Resizes input images to have areas of about 800*600. *This affects the position of matches and all output images*
+* "-bigpanorama" Allows to recreate a panorama with no restrictions on the output panorama image. *Wild homographies might cause big output panorama images.*
 * "-eigen_threshold VALUE_ET" and "-tensor_eigen_threshold VALUE_TT" Controls thresholds for eliminating aberrant descriptors. **(Both set to 10 by default)**
 
 For example, suppose we have two images (adam1.png and adam2.png) on which we want to apply Optimal-Affine-RootSIFT with the near optimal covering of 1.4. This is obtained by typing on bash the following:

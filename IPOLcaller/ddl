@@ -23,16 +23,14 @@
     },
     "build": {
         "build1": {
-            "url": "http://dev.ipol.im/~rdguez-mariano/fast_imas_IPOL-master.zip",
+            "url": "https://www.ipol.im/pub/art/2018/225/fast_imas_IPOL-master.zip",
             "construct": "cd fast_imas_IPOL-master && mkdir build && cd build && cmake .. && make -j16",
             "move": "fast_imas_IPOL-master/build/main"
         }
     },
     "general": {
-        "demo_title": "Fast Image Matching by Affine Simulation",
-        "input_description": "",
-        "param_description": "",
-        "xlink_article": "http://www.ipol.im/",
+        "demo_title": "Fast Affine Invariant Image Matching",
+        "xlink_article": "https://www.ipol.im/pub/art/2018/225/",
         "requirements":"DEBIAN_STABLE",
         "timeout": 200
     },
@@ -124,6 +122,10 @@
                 "Root-SIFT</br>": "11",
                 "Half-SIFT</br>": "21",
                 "Half-Root-SIFT</br>": "22",
+                "DIF128 (as in <a href='https://cvlab.epfl.ch/research/detect/ldahash'>Strecha et al 2012</a>) </br>": "41",
+                "LDA128 (as in <a href='https://cvlab.epfl.ch/research/detect/ldahash'>Strecha et al 2012</a>) </br>": "42",
+                "DIF64 (as in <a href='https://cvlab.epfl.ch/research/detect/ldahash'>Strecha et al 2012</a>) </br>": "43",
+                "LDA64 (as in <a href='https://cvlab.epfl.ch/research/detect/ldahash'>Strecha et al 2012</a>) </br>": "44",                
                 "SURF (as in <a href='http://www.ipol.im/pub/art/2015/69/'>Oyallon & Rabin 2015</a>)</br>": "2"
             },
             "default_value": "11",
@@ -184,7 +186,7 @@
         },
         {
             "id": "acontrario",
-            "label": "<center>A-contrario Matching</br> <i>If it exist, the third image is used for the 2nd nearest neighbor </i></center>",
+            "label": "<center>A-contrario Matching</br> <i>If it exists, the third image is used for the 2nd nearest neighbor </i></center>",
             "type": "checkbox",
             "default_value": false,
             "visible": "params.desc_type!='2'"
@@ -247,8 +249,8 @@
     "results": [
         {
             "contents": {
-            "Horizontal": {"img": "output_hori.png"},
-            "Horizontal_rich": {"img": "output_hori_rich.png"}
+            "Matches": {"img": "output_hori.png"},
+            "Matching Descriptors": {"img": "output_hori_rich.png"}
             },
             "type": "gallery"
         },
@@ -284,7 +286,6 @@
         {
             "contents": "stdout.txt", 
             "label": "<br/><b>Program Output:</b><br/>", 
-            "style": "''", 
             "type": "text_file"
         }
     ],
