@@ -45,6 +45,8 @@ void growTo(float& x0, float& y0, float& x1, float& y1, float x, float y)
 
 
 // Panorama construction
+// IPOL demo modification by Mariano Rodríguez on the 28th September, 2018.
+// Panorama is now reconstructed by default in a frame around the target image in order to avoid the creation of big images when strong homographies are present.
 /**
  * @brief Panorama Construction
  * @author Pascal Monasse, Mariano Rodríguez
