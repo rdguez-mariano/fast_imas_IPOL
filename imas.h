@@ -174,7 +174,16 @@ struct keypoint_simple {
 /**
  * @brief The very definition of a match for IMAS.
  */
-typedef std::pair<keypoint_simple,keypoint_simple> matching;
+typedef std::pair<keypoint_simple,keypoint_simple> pair_info;
+
+class matching: public pair_info
+{
+public:
+    matching():pair_info(){};
+    matching(keypoint_simple k1,keypoint_simple k2):pair_info(k1,k2),distance(-1.0){};
+    matching(keypoint_simple k1,keypoint_simple k2,float dist):pair_info(k1,k2),distance(dist){};
+    float distance = -1.0;
+};
 
 /**
  * @brief A list of matches following the structure of IMAS.

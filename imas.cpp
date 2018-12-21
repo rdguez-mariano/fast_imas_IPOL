@@ -1617,6 +1617,11 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
 
                 //my_Printf("par.MatchRatio = %f, sqratio = %f, sqratiomin = %f \n",par.MatchRatio,sqratio,sqminratio);
                 keypoint_simple k1, k2;
+#define SaveDist
+#ifdef SaveDist
+                int ii1,ii2; float dd = BIG_NUMBER_L2;
+                float dist = distance_imasKP(keys1[i], keys2[imatch], dd,ii1,ii2, normType);
+#endif
 
                 k1.x = keys1[i]->KPvec[ind1].pt.x;
                 k1.y = keys1[i]->KPvec[ind1].pt.y;
@@ -1634,8 +1639,15 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
                 k2.t = keys2[imatch]->KPvec[ind2].t;
                 k2.size = keys2[imatch]->KPvec[ind2].size;
 
-#pragma omp critical
+
+#ifdef SaveDist
+                #pragma omp critical
+                matchings.push_back( matching(k1,k2,dist) );
+#else
+                #pragma omp critical
                 matchings.push_back( matching(k1,k2) );
+#endif
+
             }
         }
     }
@@ -2336,7 +2348,7 @@ void IMAS_Impl(vector<float>& ipixels1, int w1, int h1, vector<float>& ipixels2,
     for ( int i = 0; i < (int) matchings.size(); i++ )
     {
         matching *ptr_in = &(matchings[i]);
-        // there are 14 rows of info
+        // there are 15 cols of info
         data.push_back(ptr_in->first.x); //x1_in
         data.push_back(ptr_in->first.y); //y1_in
         data.push_back(ptr_in->first.scale); //s1_in
@@ -2352,6 +2364,11 @@ void IMAS_Impl(vector<float>& ipixels1, int w1, int h1, vector<float>& ipixels2,
         data.push_back(1); //t_im2_1
         data.push_back(ptr_in->second.t); //t_im2_2
         data.push_back(ptr_in->second.theta); //theta2
+
+        if (normType==IMAS::NORM_L2) //the square wasn't taken before for speed
+            data.push_back(sqrt(ptr_in->distance));
+        else
+            data.push_back(ptr_in->distance);
     }
 
 

@@ -792,10 +792,10 @@ int main(int argc, char **argv)
 
     //Output file "data_matches.csv"
 
-    int wo = 14;
+    int wo = 15;
     ofstream myfile;
     myfile.open ("data_matches.csv", std::ofstream::out | std::ofstream::trunc);
-    myfile<<"x1, y1, sigma1, angle1, t1_x, t1_y, theta1, x2, y2, sigma2, angle2, t2_x, t2_y, theta2"<<endl;
+    myfile<<"x1, y1, sigma1, angle1, t1_x, t1_y, theta1, x2, y2, sigma2, angle2, t2_x, t2_y, theta2, distance"<<endl;
 
     if (matchings.size()>0)
     {
