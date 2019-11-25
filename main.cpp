@@ -472,11 +472,13 @@ void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,siz
         case _fixed_area:
         {
             fixed_area = true;
+            count--;
             break;
         }
         case _bigpanorama:
         {
             aroundI2 = false;
+            count--;
             break;
         }
         case _im3:
@@ -723,8 +725,17 @@ int main(int argc, char **argv)
     if (covering==-1.0f)
         covering = default_radius;
 
-    if (covering!=1.0f)
+    if (covering>1.0f)
         algo_name ="Optimal-Affine-"+algo_name;
+
+    imasCoverings ic;
+    if (covering<-1.0f)
+    {
+        algo_name = "AdOPT-Affine-"+algo_name;
+        ic.loadsimulations2do();
+    }
+    else
+        ic.loadsimulations2do(covering,default_radius,true);
 
 
     // Number of threads to use
@@ -741,8 +752,7 @@ int main(int argc, char **argv)
     my_Printf("--> Using %d threads out of %d for executing %s <--\n\n",nthreads,maxthreads,algo_name.c_str());
 
 
-    imasCoverings ic;
-    ic.loadsimulations2do(covering,default_radius,true);
+
 
     if (matchratio>0.0f)
         update_matchratio(matchratio);
@@ -760,7 +770,7 @@ int main(int argc, char **argv)
         IMAS_time tstart = IMAS::IMAS_getTickCount();
         my_Printf("Computing A-contrario hyper-descriptors...\n");
         std::vector<float> stats3;
-        int num_keys1 = IMAS_detectAndCompute(ipixels3, w3, h3, keys3, ic.getSimuDetails1(),stats3);
+        int num_keys1 = IMAS_detectAndCompute(ipixels3, w3, h3, keys3, ic.getSimuDetails2(),stats3);
 
         my_Printf("   %d hyper-descriptors from %d SIIM descriptors have been found in %d simulated versions of the A-contrario image\n", num_keys1,(int)stats3[0],ic.getTotSimu1());
         my_Printf("      stats: group_min = %d , group_mean = %.3f, group_max = %d\n",(int)stats3[1],stats3[2],(int)stats3[3]);

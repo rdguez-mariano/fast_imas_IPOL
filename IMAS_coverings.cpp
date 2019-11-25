@@ -659,7 +659,5 @@ void imasCoverings::loadsimulations2do(float covering_code,float radius, bool wr
             write_image_covering(covering_element, radius, region, tilts[tilts.size()-1]*radius, 200);
         else
             write_image_covering(covering_element, radius, region, radius*radius, 200);
-
-
     }
 }

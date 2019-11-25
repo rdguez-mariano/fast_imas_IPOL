@@ -125,7 +125,7 @@ Input Arguments:
   - 42 -> LDA128
   - 43 -> DIF64
   - 44 -> LDA64
-* "-covering VALUE_C" Selects the near optimal covering to be used. Available choices are: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 and 2. **(1.7 by default)**
+* "-covering VALUE_C" Selects the near optimal covering to be used. Available choices are: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 and 2. **(-1.0 uses desc default covering and -2.0 looks for 2simu.csv file)**
 * "-match_ratio VALUE_M" Sets the Nearest Neighbour Distance Ratio. VALUE_M is a real number between 0 and 1. **(0.6 for SURF and 0.8 for SIFT based)**
 * "-filter_precision VALUE_P" Sets the precision threshold for ORSA or USAC. VALUE_P is normally in terms of pixels. **(3 pixels for Fundamental and 10 pixels for Homography)**
 * "-filter_radius rho" It tells IMAS to use rho-hyperdescriptors **(4 pixels by default)**.
@@ -138,6 +138,12 @@ For example, suppose we have two images (adam1.png and adam2.png) on which we wa
 
 ```bash
 ./main -im1 adam1.png -im2 adam2.png -desc 11 -covering 1.4
+```
+
+The flag "-covering -2.0" will result in performing query and target tilt simulations from the file "2simu.csv". This file must appear in the working directory and must contain 4 rows where values are separated by comma in the following way: `[t^q_1,...,t^q_n], [r^q_1,...,r^q_n], [t^t_1,...,t^t_n], [r^t_1,...,r^t_n]$`. For example:
+
+```bash
+./main -im1 adam1.png -im2 adam2.png -desc 11 -covering -2.0
 ```
 
 ### Reading Geospatial Data
