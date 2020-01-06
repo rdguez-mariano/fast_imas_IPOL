@@ -729,7 +729,7 @@ int main(int argc, char **argv)
         algo_name ="Optimal-Affine-"+algo_name;
 
     imasCoverings ic;
-    if (covering<-1.0f)
+    if (covering<0.0f && covering>-1.0)
     {
         algo_name = "AdOPT-Affine-"+algo_name;
         ic.loadsimulations2do();
