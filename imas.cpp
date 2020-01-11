@@ -1604,7 +1604,7 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
     if (!(desc_type == IMAS_AC || desc_type ==IMAS_AC_Q || desc_type == IMAS_AC_W))
 #endif
     {
-#pragma omp parallel for firstprivate(keys2) shared(keys1)
+#pragma omp parallel for firstprivate(sqratio,minratio,keys2) shared(keys1) schedule(dynamic)
         for (int i=0; i< (int) keys1.size(); i++)
         {
             int imatch=-1, ind1 = -1, ind2 = -1;

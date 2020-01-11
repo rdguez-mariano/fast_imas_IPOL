@@ -1350,21 +1350,24 @@ void KeySample(
         }
     }
     // eigen values of the structure tensor // Mariano Rodríguez
-    float	det = ts_xx * ts_yy - ts_xy * ts_xy,	/// Det H = \prod l_i
-            trace = ts_xx + ts_yy;		/// tr H = \sum l_i
+    if (par.TensorThresh>0.0)
+    {
+        float	det = ts_xx * ts_yy - ts_xy * ts_xy,	/// Det H = \prod l_i
+                trace = ts_xx + ts_yy;		/// tr H = \sum l_i
 
-    /// As we do not desire edges but only corners we demand l_max / l_min less than a threshold
-    /// In practice if A = k B,     A*B = k B^2
-    ///				(A + B)^2 = (k+1)^2 * B^2
-    ///				k B^2 >  t * (k+1)^2 * B^2 sii   k  / (k+1)^2 > t
-    /// This is a decreasing function for k > 1 and value 0.3 at k=1.
-    ///       f(k) = k  / (k+1)^2
-    /// Setting t = 0.08, means k<=10
-    //std::cout<<trace<<std::endl;
-    //trace < 0.5*128*128
-    if ((det < par.TensorThresh * trace * trace))
-        //if ( (det - 0.05 *(trace*trace)) > par.TensorThresh) //harris condition
-        key.radius = -1.0f;
+        /// As we do not desire edges but only corners we demand l_max / l_min less than a threshold
+        /// In practice if A = k B,     A*B = k B^2
+        ///				(A + B)^2 = (k+1)^2 * B^2
+        ///				k B^2 >  t * (k+1)^2 * B^2 sii   k  / (k+1)^2 > t
+        /// This is a decreasing function for k > 1 and value 0.3 at k=1.
+        ///       f(k) = k  / (k+1)^2
+        /// Setting t = 0.08, means k<=10
+        //std::cout<<trace<<std::endl;
+        //trace < 0.5*128*128
+        if ((det < par.TensorThresh * trace * trace))
+            //if ( (det - 0.05 *(trace*trace)) > par.TensorThresh) //harris condition
+            key.radius = -1.0f;
+    }
 }
 
 

@@ -680,7 +680,10 @@ void get_arguments(int argc, char **argv, std::vector<float>& im1,size_t& w1,siz
         }
         case _tensor_eigen_threshold:
         {
-            tensor_thres = atof(argv[count]) / pow( 1 + atof(argv[count]) ,2);
+            if (atof(argv[count])>0.0f)
+                tensor_thres = atof(argv[count]) / pow( 1 + atof(argv[count]) ,2);
+            else
+                tensor_thres = atof(argv[count]);         
             break;
         }
         }
@@ -761,7 +764,7 @@ int main(int argc, char **argv)
     if (edge_thres>0.0f)
         update_edge_threshold(edge_thres);
 
-    if (tensor_thres>0.0f)
+    if (tensor_thres!=-1.0f)
         update_tensor_threshold(tensor_thres);
 #endif
 

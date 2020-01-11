@@ -140,6 +140,18 @@ For example, suppose we have two images (adam1.png and adam2.png) on which we wa
 ./main -im1 adam1.png -im2 adam2.png -desc 11 -covering 1.4
 ```
 
+If you want to deactivate the structure tensor (which filters out strongly biased descriptors towards a particular direction) please add the flag `-tensor_eigen_threshold -2.0f`. For example:
+
+```bash
+./main -im1 adam1.png -im2 adam2.png -tensor_eigen_threshold -2.0f
+```
+
+In order to launch an ASIFT version only modified by the concept of hyper descriptors, please type:
+
+```bash
+./main -im1 adam1.png -im2 adam2.png -covering -1.8 -desc 12 -tensor_eigen_threshold -2.0f -fixed_area
+```
+
 The flag "-covering -0.5" will result in performing query and target tilt simulations from the file "2simu.csv". This file must appear in the working directory and must contain 4 rows where values are separated by comma in the following way: `[t^q_1,...,t^q_n], [r^q_1,...,r^q_n], [t^t_1,...,t^t_n], [r^t_1,...,r^t_n]$`. For example:
 
 ```bash
