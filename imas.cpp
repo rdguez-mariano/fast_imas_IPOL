@@ -1203,7 +1203,7 @@ initially proposed by D. Lowe in \cite Lowe2004.
  * @return Found minimal ratio
  * @author Mariano Rodríguez
  */
-float CheckForMatchIMAS(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoint*>& klist, int& min, int& ind1, int& ind2, int tnorm)
+float CheckForMatchIMAS(IMAS::IMAS_KeyPoint & key, std::vector<IMAS::IMAS_KeyPoint> & klist, int& min, int& ind1, int& ind2, int tnorm)
 {
     float	dsq, distsq1, distsq2;
 #ifdef _NO_OPENCV
@@ -1221,7 +1221,7 @@ float CheckForMatchIMAS(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoin
     for (int j=0; j< (int) klist.size(); j++)
     {
         int i1=-1 ,i2=-1;
-        dsq = distance_imasKP(key, klist[j], distsq2,i1,i2, tnorm);
+        dsq = distance_imasKP(& key, & klist[j], distsq2,i1,i2, tnorm);
 
         if (dsq < distsq1) {
             distsq2 = distsq1;
@@ -1250,7 +1250,7 @@ float CheckForMatchIMAS(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoin
  * @return Found minimal ratio
  * @author Mariano Rodríguez
  */
-float CheckForMatchIMAS_acontrario(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::IMAS_KeyPoint*>& klist, int& min, int& ind1, int& ind2, int tnorm)
+float CheckForMatchIMAS_acontrario(IMAS::IMAS_KeyPoint & key, std::vector<IMAS::IMAS_KeyPoint> & klist, int& min, int& ind1, int& ind2, int tnorm)
 {
     float	dsq, distsq1, distsq2, distsq3;
 #ifdef _NO_OPENCV
@@ -1268,7 +1268,7 @@ float CheckForMatchIMAS_acontrario(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::I
     for (int j=0; j< (int) klist.size(); j++)
     {
         int i1=-1, i2=-1;
-        dsq = distance_imasKP(key, klist[j], distsq2,i1,i2, tnorm);
+        dsq = distance_imasKP(& key, & klist[j], distsq2,i1,i2, tnorm);
 
         if (dsq < distsq1) {
             distsq2 = distsq1;
@@ -1296,7 +1296,7 @@ float CheckForMatchIMAS_acontrario(IMAS::IMAS_KeyPoint* key, std::vector<IMAS::I
     for (int j=0; j< (int) keys3.size(); j++)
     {
         int i1=-1, i2=-1;
-        dsq = distance_imasKP(key, keys3[j], distsq3,i1,i2, tnorm);
+        dsq = distance_imasKP(& key, keys3[j], distsq3,i1,i2, tnorm);
 
         if (dsq < distsq2) {
             distsq3 = distsq2;
@@ -1586,19 +1586,25 @@ double quantised_patch_comparison( double * grad_angle1, double * grad_angle2,
  * @return Total number of matches
  * @author Mariano Rodríguez
  */
-int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint*>& keys1, std::vector<IMAS::IMAS_KeyPoint*>& keys2, matchingslist &matchings, int applyfilter)
+int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint*>& _keys1, std::vector<IMAS::IMAS_KeyPoint*>& _keys2, matchingslist &matchings, int applyfilter)
 {
     IMAS_time tstart = IMAS::IMAS_getTickCount();
     my_Printf("IMAS-Matcher...\n");
 
     float	minratio, sqratio;
-
     minratio = nndrRatio;
+    std::vector<IMAS::IMAS_KeyPoint> keys2(_keys2.size()), keys1(_keys1.size());
+    for (unsigned int i = 0; i<_keys2.size();i++)
+        keys2[i] = *_keys2[i];
+    for (unsigned int i = 0; i<_keys1.size();i++)
+        keys1[i] = *_keys1[i];
+    
+
 #ifdef _ACD
     if (!(desc_type == IMAS_AC || desc_type ==IMAS_AC_Q || desc_type == IMAS_AC_W))
 #endif
     {
-#pragma omp parallel for
+#pragma omp parallel for firstprivate(keys2) shared(keys1)
         for (int i=0; i< (int) keys1.size(); i++)
         {
             int imatch=-1, ind1 = -1, ind2 = -1;
@@ -1620,24 +1626,24 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
 #define SaveDist
 #ifdef SaveDist
                 int ii1,ii2; float dd = BIG_NUMBER_L2;
-                float dist = distance_imasKP(keys1[i], keys2[imatch], dd,ii1,ii2, normType);
+                float dist = distance_imasKP(& keys1[i], & keys2[imatch], dd,ii1,ii2, normType);
 #endif
 
-                k1.x = keys1[i]->KPvec[ind1].pt.x;
-                k1.y = keys1[i]->KPvec[ind1].pt.y;
-                k1.scale = keys1[i]->KPvec[ind1].scale;
-                k1.angle = keys1[i]->KPvec[ind1].angle;
-                k1.theta = keys1[i]->KPvec[ind1].theta;
-                k1.t = keys1[i]->KPvec[ind1].t;
-                k1.size = keys1[i]->KPvec[ind1].size;
+                k1.x = keys1[i].KPvec[ind1].pt.x;
+                k1.y = keys1[i].KPvec[ind1].pt.y;
+                k1.scale = keys1[i].KPvec[ind1].scale;
+                k1.angle = keys1[i].KPvec[ind1].angle;
+                k1.theta = keys1[i].KPvec[ind1].theta;
+                k1.t = keys1[i].KPvec[ind1].t;
+                k1.size = keys1[i].KPvec[ind1].size;
 
-                k2.x = keys2[imatch]->KPvec[ind2].pt.x;
-                k2.y = keys2[imatch]->KPvec[ind2].pt.y;
-                k2.scale = keys2[imatch]->KPvec[ind2].scale;
-                k2.angle = keys2[imatch]->KPvec[ind2].angle;
-                k2.theta = keys2[imatch]->KPvec[ind2].theta;
-                k2.t = keys2[imatch]->KPvec[ind2].t;
-                k2.size = keys2[imatch]->KPvec[ind2].size;
+                k2.x = keys2[imatch].KPvec[ind2].pt.x;
+                k2.y = keys2[imatch].KPvec[ind2].pt.y;
+                k2.scale = keys2[imatch].KPvec[ind2].scale;
+                k2.angle = keys2[imatch].KPvec[ind2].angle;
+                k2.theta = keys2[imatch].KPvec[ind2].theta;
+                k2.t = keys2[imatch].KPvec[ind2].t;
+                k2.size = keys2[imatch].KPvec[ind2].size;
 
 
 #ifdef SaveDist
