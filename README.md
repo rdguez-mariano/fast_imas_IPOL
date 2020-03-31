@@ -166,7 +166,7 @@ The flag "-covering -0.5" will result in performing query and target tilt simula
 
 ### Adaptive coverings
 
-All these IMAS methods can also be used as [https://github.com/rdguez-mariano/fast_imas_IPOL/tree/master/adaptiveIMAS](Adaptive IMAS methods). Follow the instructions in that link to get ready with adaptive coverings.
+All these IMAS methods can also be used as [Adaptive IMAS methods](https://github.com/rdguez-mariano/fast_imas_IPOL/tree/master/adaptiveIMAS). Follow the instructions in that link to get ready with adaptive coverings.
 
 ### Reading Geospatial Data
 In order to read geospatial data please use the following flags:
