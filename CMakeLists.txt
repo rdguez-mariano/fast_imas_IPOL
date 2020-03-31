@@ -96,7 +96,7 @@ set(USAC ON)
 set(opencv OFF)
 
 # ACTIVATE AC Descriptors
-set(ACD ON)
+set(ACD OFF)
 # ACTIVATE old AC-Q Matcher
 set(OLD_ACQ OFF)
 

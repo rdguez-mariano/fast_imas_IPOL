@@ -22,12 +22,12 @@ Some [LDAHash descriptors](https://cvlab.epfl.ch/research/detect/ldahash) are av
 - DIF64
 - LDA64
 
-Also, those descriptors and matchers introduced in [Affine invariant image comparison under repetitive structures](https://rdguez-mariano.github.io/pages/acdesc) are now available (but still unoptimised). They are:
+Also, those descriptors and matchers introduced in [Affine invariant image comparison under repetitive structures](https://rdguez-mariano.github.io/pages/acdesc) are available. They are:
 - AC
 - AC-Q
 - AC-W
 
-Depending on the SIIM, we propose optimal sets of affine simulations as in [Covering the Space of Tilts](https://rdguez-mariano.github.io/pages/imas).
+Depending on the SIIM, we propose optimal sets of affine simulations as in [Covering the Space of Tilts](https://rdguez-mariano.github.io/pages/imas). We also propose adaptive coverings as in [CNN-assisted coverings in the Space of Tilts](https://rdguez-mariano.github.io/pages/adimas).
 
 This version of IMAS is based on the concept of hyper-descriptors and their associated matchers. See [Fast Affine Invariant Image Matching](https://rdguez-mariano.github.io/pages/hyperdescriptors) for more information on this.
 
@@ -80,11 +80,17 @@ Just be sure that the CMakeLists.txt file has the GDAL flag set to OFF (.e.g. `s
 
 
 ### Activating LDAHash
-[LDAHash descriptors](https://cvlab.epfl.ch/research/detect/ldahash) are available by setting the LDAHash flag set to ON in the CMakeLists.txt file (.e.g. `set(LDAHASH ON)`).
+[LDAHash descriptors](https://cvlab.epfl.ch/research/detect/ldahash) are available by setting the LDAHash flag to ON in the CMakeLists.txt file (.e.g. `set(LDAHASH ON)`).
 
 ### Deactivating LDAHash
 Just be sure that the CMakeLists.txt file has the LDAHash flag set to OFF (.e.g. `set(LDAHASH OFF)`).
 
+
+### Activating AC descriptors
+The angle field descriptor and its [AC matchers](https://rdguez-mariano.github.io/pages/acdesc) are available by setting the ACD flag to ON in the CMakeLists.txt file (.e.g. `set(ACD ON)`). Also if you want to activate the exact AC-Q matcher described in [this paper](https://rdguez-mariano.github.io/pages/acdesc) please do `set(OLD_ACQ ON)`. The new AC-Q is an approximation of the old version but faster. 
+
+### Deactivating AC descriptors
+Just be sure that the CMakeLists.txt file has the ACD flag set to OFF (.e.g. `set(ACD OFF)`).
 
 
 ## Compiling on Linux
@@ -157,6 +163,10 @@ The flag "-covering -0.5" will result in performing query and target tilt simula
 ```bash
 ./main -im1 adam1.png -im2 adam2.png -desc 11 -covering -0.5
 ```
+
+### Adaptive coverings
+
+All these IMAS methods can also be used as [https://github.com/rdguez-mariano/fast_imas_IPOL/tree/master/adaptiveIMAS](Adaptive IMAS methods). Follow the instructions in that link to get ready with adaptive coverings.
 
 ### Reading Geospatial Data
 In order to read geospatial data please use the following flags:
