@@ -75,6 +75,18 @@
 #define IndexSize1  4
 
 
+#ifdef _ACD
+#include <bitset>
+#define maxNewOriSize1 22
+#define AngleDivisions 29
+#define AngleForwardRotations 1
+// #define AngleDivisions 64
+// #define AngleForwardRotations 2
+#endif
+
+
+
+
 /* Keypoint structure:
 	position:	x,y
 	scale:		s
@@ -101,6 +113,8 @@ struct keypoint:keypoint_base<OriSize1,IndexSize1>
 #ifdef _ACD
     double* gradangle;
     double* gradmod;
+    std::bitset<(maxNewOriSize1*maxNewOriSize1)>* isDefined; //22 = max(NewOriSize1)
+    std::bitset<(AngleDivisions*maxNewOriSize1*maxNewOriSize1)>** fastgradangle;
 #endif
 };
 

@@ -1352,6 +1352,25 @@ static inline double norm_angle(double a, double b)
 
 /*----------------------------------------------------------------------------*/
 /**
+ * @brief Simple patch_comparison. Creates an array of n elements, each element is
+ * in fact the critic k (sum of angles, k<=n) for which the nfa changes sign. 
+  * @author Mariano Rodríguez
+ */
+double* maxk_anglesum;
+void create_maxk_for_patch_comparison(double logNT)
+{
+    const int nmax = (NewOriSize1-2)*(NewOriSize1-2);
+    delete[] maxk_anglesum;
+    maxk_anglesum = new double[nmax];
+    // logNFAC = logNT + n * log10(k) - 0.5 * log10(2.0 * M_PI) - (n+0.5) * log10(n) + n * log10(exp(1.0));
+    for(int n=0; n<nmax-1; n++)
+    {
+        double Cn = logNT + - 0.5 * log10(2.0 * M_PI) - (n+0.5) * log10(n) + n * log10(exp(1.0));
+        maxk_anglesum[n] = exp10( -Cn/double(n) );
+    }
+}
+
+/**
  * @brief Simple patch_comparison
  * @param grad_angle1
  * @param grad_angle2
@@ -1361,41 +1380,48 @@ static inline double norm_angle(double a, double b)
  * @return
  * @author Rafael Grompone von Gioi, Mariano Rodríguez
  */
-double patch_comparison( double * grad_angle1, double * grad_angle2,
-                         int X, int Y, double logNT )
+double patch_comparison( keypoint * key1, keypoint * key2,
+                         double logNT, double & minanglesum )
 {
     int n = 0;      /* count of angles compared */
     double k = 0.0; /* measure of symmetric angles */
     double logNFAC;
+    int X = NewOriSize1, Y = NewOriSize1;
+    int x,y ;
+    bool A,B;
 
-    int nmax = (X-2)*(Y-2);
-    /* logNFAC-logNT <= 0 */
-    /* logNFAC-logNT = nmax * log10(k) - 0.5 * log10(2.0 * M_PI) - (nmax+0.5) * log10(nmax) + nmax * log10(exp(1.0)) */
-    double threshold = pow(10, (0.5 * log10(2.0 * M_PI) + (nmax+0.5) * log10(nmax) - nmax * log10(exp(1.0)))/nmax );
-    int x,y,A,B;
+    int a = (*key1->isDefined & *key2->isDefined).count();                            
+    int b = (*key1->isDefined ^ *key2->isDefined).count();
+    n = a+b;
+    k = b;
+    
 
-
+    double thres;
+    if (maxk_anglesum[n]>minanglesum)
+        thres = minanglesum;
+    else
+        thres = maxk_anglesum[n];
+     
     for(x=1; x<X-1; x++)
         for(y=1; y<Y-1; y++)
         {
-            A = grad_angle1[x+y*X] != NOTDEF;  /* A has defined gradient */
-            B = grad_angle2[x+y*X] != NOTDEF;  /* B has defined gradient */
+            A = key1->gradangle[x+y*X] != NOTDEF;  /* A has defined gradient */
+            B = key2->gradangle[x+y*X] != NOTDEF;  /* B has defined gradient */
+            
+            if( A && B) { k += norm_angle(key1->gradangle[x+y*X], key2->gradangle[x+y*X]);}
 
-            /* if at least one of the corresponding pixels has defined gradient,
-           count it in the total number of pixels evaluated */
-            if( A || B ) ++n;
-
-            if( A && B) k += norm_angle(grad_angle1[x+y*X], grad_angle2[x+y*X]);
-            else if( (A && !B) || (!A && B) ) k += 1.0;
-
-            if (k>threshold)
-                return (logNT);
+            if (k>=thres) 
+                return (1000.0);
         }
 
     /* NFAC = NT * k^n / n!
      log(n!) is bounded by Stirling's approximation:
        n! >= sqrt(2pi) * n^(n+0.5) * exp(-n)
      then, log10(NFA) <= log10(NT) + n*log10(k) - log10(latter expansion) */
+    
+    if (minanglesum>k) 
+        minanglesum = k;
+
     logNFAC = logNT + n * log10(k)
             - 0.5 * log10(2.0 * M_PI) - (n+0.5) * log10(n) + n * log10(exp(1.0));
 
@@ -1404,27 +1430,33 @@ double patch_comparison( double * grad_angle1, double * grad_angle2,
 
 double* weights;
 double sum_log_w;
-double threshold_AC;
+double* cumsum_sorted_w;
 double sigma_default = -1.0;
 
 
 /**
- * @brief create_weights_for_patch_comparison
+ * @brief create_weights_for_patch_comparison. This computes the weights that will
+ * be used in matching with AC-W and also will create a cummulative sum of ordered 
+ * weights that will be useful for discarding matches.
  * @param X
  * @param Y
  * @author Rafael Grompone von Gioi, Mariano Rodríguez
  */
-void create_weights_for_patch_comparison(int X, int Y)
+void create_weights_for_weighted_patch_comparison(double logNT)
 {
+    int X = NewOriSize1, Y = NewOriSize1;
     sum_log_w = 0.0;
     delete[] weights;
     weights = new double[X*Y];
+    delete[] cumsum_sorted_w;
+    cumsum_sorted_w = new double[(X-1)*(Y-1)];
     int r = (int) (X/2), c = (int) (Y/2);
     double w;
 
     for(int x=0; x<X*Y; x++)
         weights[x] = NOTDEF;
 
+    int cn = 0;
     for(int x=1; x<X-1; x++)
         for(int y=1; y<Y-1; y++)
         {
@@ -1435,11 +1467,23 @@ void create_weights_for_patch_comparison(int X, int Y)
                 w = exp( -(pow(r-x,2)+pow(c-y,2))/(2.0*X*Y) );
             weights[x+y*X] = w;
             sum_log_w += log10(w);
+            cumsum_sorted_w[cn++] = w;
         }
+    
+    std::sort(& cumsum_sorted_w[0], & cumsum_sorted_w[(X-1)*(Y-1)]);
     int nmax = (X-2)*(Y-2);
-    /* logNFAC-logNT <= 0 */
-    /* logNFAC-logNT = nmax * log10(k) - 0.5 * log10(2.0 * M_PI) - (nmax+0.5) * log10(nmax) + nmax * log10(exp(1.0)) */
-    threshold_AC = pow(10, (sum_log_w + 0.5 * log10(2.0 * M_PI) + (nmax+0.5) * log10(nmax) - nmax * log10(exp(1.0)))/nmax );
+    for(int i =1; i<nmax; i++)
+        cumsum_sorted_w[i] = cumsum_sorted_w[i-1] + cumsum_sorted_w[i];
+
+    
+    delete[] maxk_anglesum;
+    maxk_anglesum = new double[nmax];
+    // logNFAC = logNT + n * log10(k) - sum_log_w - 0.5 * log10(2.0 * M_PI) - (n+0.5) * log10(n) + n * log10(exp(1.0));
+    for(int n=0; n<nmax-1; n++)
+    {
+        double Cn = logNT - sum_log_w - 0.5 * log10(2.0 * M_PI) - (n+0.5) * log10(n) + n * log10(exp(1.0));
+        maxk_anglesum[n] = exp10( -Cn/double(n) );
+    }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1455,15 +1499,36 @@ void create_weights_for_patch_comparison(int X, int Y)
  * @return
  * @author Rafael Grompone von Gioi, Mariano Rodríguez
  */
-double weighted_patch_comparison( double * grad_angle1, double * grad_angle2,
-                                  double * grad_mod1,   double * grad_mod2,
-                                  int X, int Y, double logNT )
+double weighted_patch_comparison( keypoint * key1, keypoint * key2,
+                         double logNT, double & minanglesum )                         
 {
     int n = 0;      /* count of angles compared */
     double k = 0.0; /* measure of symmetric angles */
     double logNFAC;
     int x,y;
+    double * grad_angle1 = key1->gradangle; 
+    double * grad_angle2 = key2->gradangle; 
+    double * grad_mod1 = key1->gradmod; 
+    double * grad_mod2 = key2->gradmod; 
+    int X =NewOriSize1, Y=NewOriSize1;
 
+    std::bitset<(maxNewOriSize1*maxNewOriSize1)> bset_a = (*key1->isDefined & *key2->isDefined);                            
+    std::bitset<(maxNewOriSize1*maxNewOriSize1)> bset_b = (*key1->isDefined ^ *key2->isDefined);
+
+    n = bset_a.count() + bset_b.count();
+    int kmax = bset_b.count();     
+
+    double thres;
+    if (maxk_anglesum[n]>minanglesum)
+        thres = minanglesum;
+    else
+        thres = maxk_anglesum[n];
+
+    // for the same number Sum(A^B), what is the minimum possible sum of weights
+    if (cumsum_sorted_w[kmax]>=thres) 
+        return (1000.0);
+
+    // this might be a match, so we need to compute the hard way
     for(x=1; x<X-1; x++)
         for(y=1; y<Y-1; y++)
         {
@@ -1471,17 +1536,11 @@ double weighted_patch_comparison( double * grad_angle1, double * grad_angle2,
             double b = grad_angle2[x+y*X];
             int A = (a != NOTDEF);  /* A has defined gradient */
             int B = (b != NOTDEF);  /* B has defined gradient */
+           
+            if( A && B) k += weights[x+y*X] * norm_angle(a,b);
+            if( A ^ B) k += weights[x+y*X];
 
-            /* if at least one of the corresponding pixels has defined gradient,
-           count it in the total number of pixels evaluated */
-            if( A || B )
-            {
-                ++n;
-                if( A && B) k += weights[x+y*X] * norm_angle(a,b);
-                else        k += weights[x+y*X];  /* one angle not defined, maximal error = 1 */
-            }
-
-            if (k>threshold_AC)
+            if (k>thres)
                 return (logNT);
         }
 
@@ -1518,6 +1577,40 @@ double nfa(double logNT, int n, int k, double p)
     return logNT + log_binom;
 }
 
+
+int* k_thres_vector;
+void create_k_thres_vector()
+{
+    int nmax = (NewOriSize1-2)*(NewOriSize1-2);
+    delete[] k_thres_vector;
+    k_thres_vector = new int[nmax];
+    for(int i=0;i<nmax;i++)
+        k_thres_vector[i] = NOTDEF;
+}
+
+
+/**
+ * @brief k_thres. This finds the critic k for which 
+ * nfa(logNT, k, middle, p)>0 and nfa(logNT, k+1, middle, p)<0
+ * @author Mariano Rodríguez
+ */
+int k_thres(double logNT, int n, double p)
+{
+    if (k_thres_vector[n]!=NOTDEF)
+        return k_thres_vector[n];
+    int start = 0, end = n, middle = 0;    
+    while(end-start>1)
+    {
+        middle = floor( (start+end)/2 );
+        if (nfa(logNT, n, middle, p)>0)
+            start = middle;
+        else
+            end = middle;
+    }
+    k_thres_vector[n] = middle;
+    return k_thres_vector[n];
+}
+
 /**
  * @brief quantised_patch_comparison
  * @param grad_angle1
@@ -1530,16 +1623,30 @@ double nfa(double logNT, int n, int k, double p)
  * @return
  * @author Rafael Grompone von Gioi, Mariano Rodríguez
  */
-double quantised_patch_comparison( double * grad_angle1, double * grad_angle2,
-                                   double * grad_mod1,   double * grad_mod2,
-                                   int X, int Y, double logNT )
+double quantised_patch_comparison( keypoint * key1, keypoint * key2,
+                         double logNT, double & minanglesum )
 {
     int n = 0;      /* count of angles compared */
     int k = 0; /* measure of symmetric angles */
     double logNFAC;
     int x,y;
+    double * grad_angle1 = key1->gradangle; 
+    double * grad_angle2 = key2->gradangle; 
+    double * grad_mod1 = key1->gradmod; 
+    double * grad_mod2 = key2->gradmod; 
+    int X =NewOriSize1, Y=NewOriSize1;
 
+    std::bitset<(maxNewOriSize1*maxNewOriSize1)> bset_a = (*key1->isDefined & *key2->isDefined);                            
+    std::bitset<(maxNewOriSize1*maxNewOriSize1)> bset_b = (*key1->isDefined ^ *key2->isDefined);
 
+    int min_n_minus_k = bset_b.count();
+    n = bset_a.count() + min_n_minus_k;
+    
+
+    if  ( (n- min_n_minus_k) < k_thres(logNT,n,quant_prec)) 
+        return 1000;
+
+#ifdef _OLDACQ
     for(x=1; x<X-1; x++)
         for(y=1; y<Y-1; y++)
         {
@@ -1548,25 +1655,30 @@ double quantised_patch_comparison( double * grad_angle1, double * grad_angle2,
             int A = (a != NOTDEF);  /* A has defined gradient */
             int B = (b != NOTDEF);  /* B has defined gradient */
 
-            /* if at least one of the corresponding pixels has defined gradient,
-           count it in the total number of pixels evaluated */
-            if( A || B ) //if( A || B )
-            {
-                ++n;
-
-                if(( A && B)&&(norm_angle(a,b)<quant_prec))
+        //    if( (A && B)&&(norm_angle(a,b)<quant_prec)) k++;
+           
+        //     /* if at least one of the corresponding pixels has defined gradient,
+        //    count it in the total number of pixels evaluated */
+            
+            if(( A && B)&&(norm_angle(a,b)<quant_prec))
+                k ++ ;       
                     k ++ ;
-                /* one angle not defined, maximal error = 1 */
-            }
+                k ++ ;       
         }
+#else
+    k += (*key1->fastgradangle[0] & *key2->fastgradangle[0]).count();
+    for (int i=1; i<AngleForwardRotations; i++)
+    {
+        k += (*key1->fastgradangle[0] & *key2->fastgradangle[i]).count();
+        k += (*key1->fastgradangle[i] & *key2->fastgradangle[0]).count();
+    }
+#endif
 
-    /* NFAC = NT * k^n / (n! * prod_i w_i)
-     log(n!) is bounded by Stirling's approximation:
-       n! >= sqrt(2pi) * n^(n+0.5) * exp(-n)
-     then, log10(NFA) <= log10(NT) + n*log10(k) - log10(latter expansion) */
-
-    logNFAC = nfa(logNT,n,k,quant_prec);
-
+    if  ( k >= k_thres(logNT,n,quant_prec) ) 
+        logNFAC = nfa(logNT,n,k,quant_prec);
+    else
+        logNFAC = 1000;
+    
     return logNFAC;
 }
 
@@ -1659,9 +1771,7 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
     }
 #ifdef _ACD
     else
-    {
-        if(desc_type==IMAS_AC_W)
-            create_weights_for_patch_comparison(NewOriSize1, NewOriSize1);
+    {        
         int X1 = w1, Y1 = h1, X2 = w2, Y2 = h2;
         double logNT;
         logNT = 1.5*log10(X1) + 1.5*log10(Y1)
@@ -1669,16 +1779,27 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
                 + log10( log( 2.0 * max(X1,Y1) ) / log(2.0) )
                 + log10( log( 2.0 * max(X2,Y2) ) / log(2.0) )
                 + 2.0*log10(_arearatio);
+        int nmax = (NewOriSize1-2)*(NewOriSize1-2);
+        double threshold_patch_comparison = pow(10, (0.5 * log10(2.0 * M_PI) + (nmax+0.5) * log10(nmax) - nmax * log10(exp(1.0)))/nmax );
+        if(desc_type==IMAS_AC_W)
+            create_weights_for_weighted_patch_comparison(logNT);
+        if (desc_type==IMAS_AC)
+                    create_maxk_for_patch_comparison(logNT);
+        if (desc_type==IMAS_AC_Q)
+                    create_k_thres_vector();
 
-#pragma omp parallel for
+#pragma omp parallel for firstprivate(keys2) shared(keys1) schedule(dynamic)
         for (int n1=0; n1< (int) keys1.size(); n1++)
+        {            
             for (int n2=0; n2< (int) keys2.size(); n2++)
             {
                 IMAS::IMAS_KeyPoint *k1, *k2;
-                k1 = keys1[n1];
-                k2 = keys2[n2];
+                k1 = & keys1[n1];
+                k2 = & keys2[n2];
                 int ind1 = -1, ind2 = -1;
-                double bestlogNFA = logNT, logNFA = 1000.0;
+                double bestlogNFA = 0.0, logNFA = 1000.0;      
+                double minanglesum = 1000;
+                        
                 for(int i1=0;i1<(int)k1->KPvec.size();i1++)
                     for(int i2=0;i2<(int)k2->KPvec.size();i2++)
                     {
@@ -1687,29 +1808,25 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
                         case IMAS_AC: // without weights
                         {
                             logNFA = patch_comparison(
-                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradangle,
-                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradangle,
-                                        NewOriSize1,NewOriSize1,logNT);
+                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr),
+                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr),
+                                        logNT, minanglesum);
                             break;
                         }
                         case IMAS_AC_W: //weighted
                         {
                             logNFA = weighted_patch_comparison(
-                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradangle,
-                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradangle,
-                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradmod,
-                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradmod,
-                                        NewOriSize1,NewOriSize1,logNT);
+                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr),
+                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr),
+                                        logNT, minanglesum);
                             break;
                         }
                         case IMAS_AC_Q: //quantised
                         {
                             logNFA = quantised_patch_comparison(
-                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradangle,
-                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradangle,
-                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr)->gradmod,
-                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr)->gradmod,
-                                        NewOriSize1,NewOriSize1,logNT);
+                                        static_cast<keypoint*>(k1->KPvec[i1].pt.kp_ptr),
+                                        static_cast<keypoint*>(k2->KPvec[i2].pt.kp_ptr),
+                                        logNT, minanglesum);
                             break;
                         }
 
@@ -1723,34 +1840,35 @@ int IMAS_matcher(int w1, int h1, int w2, int h2, std::vector<IMAS::IMAS_KeyPoint
                         }
                     }
 
-                if (bestlogNFA<0)
+                if (bestlogNFA<0.0)
                 {
                     {
-                        keypoint_simple k1, k2;
+                        keypoint_simple ks1, ks2;
 
-                        k1.x = keys1[n1]->KPvec[ind1].pt.x;
-                        k1.y = keys1[n1]->KPvec[ind1].pt.y;
-                        k1.scale = keys1[n1]->KPvec[ind1].scale;
-                        k1.angle = keys1[n1]->KPvec[ind1].angle;
-                        k1.theta = keys1[n1]->KPvec[ind1].theta;
-                        k1.t = keys1[n1]->KPvec[ind1].t;
-                        k1.size = keys1[n1]->KPvec[ind1].size;
+                        ks1.x =     keys1[n1].KPvec[ind1].pt.x;
+                        ks1.y =     keys1[n1].KPvec[ind1].pt.y;
+                        ks1.scale = keys1[n1].KPvec[ind1].scale;
+                        ks1.angle = keys1[n1].KPvec[ind1].angle;
+                        ks1.theta = keys1[n1].KPvec[ind1].theta;
+                        ks1.t =     keys1[n1].KPvec[ind1].t;
+                        ks1.size =  keys1[n1].KPvec[ind1].size;
 
-                        k2.x = keys2[n2]->KPvec[ind2].pt.x;
-                        k2.y = keys2[n2]->KPvec[ind2].pt.y;
-                        k2.scale = keys2[n2]->KPvec[ind2].scale;
-                        k2.angle = keys2[n2]->KPvec[ind2].angle;
-                        k2.theta = keys2[n2]->KPvec[ind2].theta;
-                        k2.t = keys2[n2]->KPvec[ind2].t;
-                        k2.size = keys2[n2]->KPvec[ind2].size;
+                        ks2.x =     keys2[n2].KPvec[ind2].pt.x;
+                        ks2.y =     keys2[n2].KPvec[ind2].pt.y;
+                        ks2.scale = keys2[n2].KPvec[ind2].scale;
+                        ks2.angle = keys2[n2].KPvec[ind2].angle;
+                        ks2.theta = keys2[n2].KPvec[ind2].theta;
+                        ks2.t =     keys2[n2].KPvec[ind2].t;
+                        ks2.size =  keys2[n2].KPvec[ind2].size;
 
 
 #pragma omp critical
-                        matchings.push_back( matching(k1,k2) );
+                        matchings.push_back( matching(ks1,ks2) );
                     }
 
                 }
             }
+        }
     }
 #endif
     my_Printf("   %d possible matches have been found. \n", (int) matchings.size());

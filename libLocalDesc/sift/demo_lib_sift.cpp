@@ -245,6 +245,45 @@ void UpdateKeypoint_AC(
         float scale, float row, float col,siftPar &par)
 {
     key.gradangle = grad( &key.gradmod ,col,row,key.angle,scale,blur.getPlane(),blur.nwidth(),blur.nheight(),NewOriSize1,NewOriSize1 ,key, key.radius, par);
+    int i = 0, X = NewOriSize1, Y = NewOriSize1;
+    key.isDefined = new std::bitset<(maxNewOriSize1*maxNewOriSize1)>;
+    key.isDefined->reset();
+    for(int x=1; x<X-1; x++)
+    { 
+        i++;
+        for(int y=1; y<Y-1; y++)
+        {   
+            if (key.gradangle[x+y*X] != NOTDEF)                            
+                key.isDefined->set(i);
+            i++;                
+        }
+        i++;
+    }
+
+#ifndef _OLDACQ
+    if (desc_type==IMAS_AC_Q)
+    {        
+        key.fastgradangle = new std::bitset<(AngleDivisions*maxNewOriSize1*maxNewOriSize1)>*[AngleForwardRotations];
+        for (int i = 0; i< AngleForwardRotations; i++)
+        {
+            key.fastgradangle[i] = new std::bitset<(AngleDivisions*maxNewOriSize1*maxNewOriSize1)>;
+            key.fastgradangle[i]->reset();            
+        }
+
+        for (int i = 0; i< NewOriSize1*NewOriSize1; i++)
+            if ( key.gradangle[i] != NOTDEF )
+            {                
+                int x = floor( AngleDivisions*(key.gradangle[i]+M_PI)/(2*M_PI));                
+                if (x==AngleDivisions) x=0;
+                for (int j = 0; j< AngleForwardRotations; j++)
+                    {
+                        int y = x + j;
+                        if (y>=AngleDivisions) y-=AngleDivisions;
+                        key.fastgradangle[j]->set( y + i*AngleDivisions );                        
+                    }
+            }          
+    }
+#endif    
     key.octscale = scale;
     key.octcol = col;
     key.octrow = row;
