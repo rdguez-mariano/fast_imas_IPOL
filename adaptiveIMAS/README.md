@@ -15,6 +15,9 @@ source activate adimas
 
 pip install --upgrade pip
 pip install -r requirements.txt
+
+sudo apt-get install -y libconfig++-dev
+sudo apt-get install -y liblapack-dev
 ```
 
 ##### Setup
