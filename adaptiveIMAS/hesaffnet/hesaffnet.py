@@ -22,14 +22,14 @@ from LAF import normalizeLAFs, denormalizeLAFs, LAFs2ell, abc2A, convertLAFs_to_
 from Utils import line_prepender, batched_forward
 from architectures import AffNetFast
 from HardNet import HardNet
-
+from library import opt
 
 # USE_CUDA = False
 USE_CUDA = torch.cuda.is_available()
 WRITE_IMGS_DEBUG = False
 
 AffNetPix = AffNetFast(PS = 32)
-weightd_fname = 'hesaffnet/pretrained/AffNet.pth'
+weightd_fname = opt.bindir+'hesaffnet/pretrained/AffNet.pth'
 if USE_CUDA:
     checkpoint = torch.load(weightd_fname, map_location='cuda:0')
 else:
@@ -39,7 +39,7 @@ AffNetPix.eval()
 
 
 HardNetDescriptor = HardNet()
-model_weights = 'hesaffnet/pretrained/HardNet++.pth'
+model_weights = opt.bindir+'hesaffnet/pretrained/HardNet++.pth'
 if USE_CUDA:
     hncheckpoint = torch.load(model_weights, map_location='cuda:0')
 else:

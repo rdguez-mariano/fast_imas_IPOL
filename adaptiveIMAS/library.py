@@ -7,9 +7,190 @@ import random
 import psutil
 import ctypes
 from datetime import datetime
+import argparse
 
 MaxSameKP_dist = 5 # pixels
 MaxSameKP_angle = 10 # degrees
+
+class BaseOptions():
+    def __init__(self):
+        """Reset the class; indicates the class hasn't been initailized"""
+        self.initialized = False
+        self.save_dir = './'
+
+    def initialize(self, parser):
+        """Define the common options."""
+        # basic parameters
+        parser.add_argument('--im1', type=str, default='../../deep-asift/acc-test/TestDatasets/EVD/1/cat.png', required=False, help='Path to query image')
+        parser.add_argument('--im2', type=str, default='../../deep-asift/acc-test/TestDatasets/EVD/2/cat.png', required=False, help='Path to Target image')
+        
+        parser.add_argument('--gfilter', type=int, default=4, help='Geometric filter internal code. It is traduced into IntCode-#.')
+        parser.add_argument('--covering', type=float, default=1.7, help='Covering code.')
+        parser.add_argument('--type', type=str, default='FixedTilts', required=False, help='Adaptive algorithm: [ FixedTilts, Greedy].')
+        parser.add_argument('--detector', type=str, default='HessAff', required=False, help='Detector: [ HessAff, SIFT].')
+        parser.add_argument('--descriptor', type=int, default=11, required=False, help='Descriptor code: [ 11 - RootSIFT, 2 - SURF, 1 - SIFT].')
+
+        parser.add_argument('--dilate', default= False, action='store_true', help='Virtually dilate the area of affnet affmaps')
+        parser.add_argument('--visual', default= True, action='store_true', help='Visualize output images')
+
+        parser.add_argument('--workdir', type=str, default='/tmp/', required=False, help='IMAS work dir.')
+        parser.add_argument('--bindir', type=str, default='./', required=False, help='Binaries directory (for IPOL demo).')
+
+        self.initialized = True
+        return parser
+
+    def gather_options(self):
+        """Initialize our parser with basic options (only once).
+        """
+        if not self.initialized:  # check if it has been initialized
+            parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+            parser = self.initialize(parser)
+
+        # get the basic options
+        opt, _ = parser.parse_known_args()
+
+        # save and return the parser
+        self.parser = parser
+        return parser.parse_args()
+
+    def print_options(self, opt, verbose = True):
+        """Print and save options
+        """
+        message = ''
+        message += '----------------- Options ---------------\n'
+        for k, v in sorted(vars(opt).items()):
+            comment = ''
+            default = self.parser.get_default(k)
+            if v != default:
+                comment = '\t[default: %s]' % str(default)
+            message += '{:>25}: {:<30}{}\n'.format(str(k), str(v), comment)
+        message += '----------------- End -------------------'
+        if verbose:
+            print(message)
+
+        # save to the disk
+        expr_dir = self.save_dir
+        file_name = os.path.join(expr_dir, 'opt.txt')
+        with open(file_name, 'wt') as opt_file:
+            opt_file.write(message)
+            opt_file.write('\n')
+
+    def parse(self):
+        """Parse our options."""
+        opt = self.gather_options()
+        self.print_options(opt)
+        self.opt = opt
+        return self.opt
+
+opt = BaseOptions().parse()
+
+
+
+import seaborn as sns
+from matplotlib import pyplot as plt
+def PlotInSpaceOfTilts(decompList, *args, density = False, **kwargs):
+    '''To use this function please do:
+        from matplotlib import pyplot as plt
+     If you have affine maps decompose them with:
+        decompList = [affine_decomp(A) for A in Alist]
+    ''' 
+    decompList = np.array(decompList).reshape(-1,6)    
+    x = np.log(decompList[:,2]) * np.cos(decompList[:,3])
+    y = np.log(decompList[:,2]) * np.sin(decompList[:,3])
+    if density:
+        sns.kdeplot(x, y, cmap="Reds", shade=True, shade_lowest=False, bw=.15)
+    else:
+        plt.plot(x,y,*args, **kwargs)  
+
+def CreateBaseFig(num):
+    plt.figure(num,figsize=(7,5))
+    PlotInSpaceOfTilts([[1, 0, 1, 0, 0, 0]], 'ko', markersize=2, label='[Id]')
+    PlotInSpaceOfTilts([[1, 0, 2, x, 0, 0] for x in np.arange(0,np.pi,0.1)],  color='black', marker='', markersize=5, linestyle='dashed', linewidth=1, label='tilt 2')
+    PlotInSpaceOfTilts([[1, 0, 4, x, 0, 0] for x in np.arange(0,np.pi,0.1)],  color='black', marker='', markersize=5, linestyle='dashed', linewidth=2, label='tilt 4')
+    PlotInSpaceOfTilts([[1, 0, 8, x, 0, 0] for x in np.arange(0,np.pi,0.1)],  color='black', marker='', markersize=5, linestyle='dashed', linewidth=3, label='tilt 8')
+    plt.axis('scaled')
+    plt.xlabel(r'$\log (\tau) \cos (\phi) $')
+    plt.ylabel(r'$\log (\tau) \sin (\phi) $')
+
+
+def get_disk_edges(t,psi,tiltradius):
+    gamma = np.exp(tiltradius)
+    beta = ( (gamma**2)+1.0 )/(2.0*gamma)
+    phivect = np.linspace(0.0, np.pi, num=1000, endpoint=True)
+    pointsup = tuple([])
+    pointinf = tuple([])
+    for phi in phivect:
+        Gphi = np.cos(psi-phi)**2
+        dis = beta**2 - ( Gphi/t + t*(1-Gphi) )*( (1-Gphi)/t + t*Gphi )
+        if dis>0:
+            tupper = ( beta + np.sqrt(dis) )/( Gphi/t + (1-Gphi)*t )
+            tlower = ( beta - np.sqrt(dis) )/( Gphi/t + (1-Gphi)*t )
+            if (tupper<1):
+                pointsup = pointsup + tuple([np.nan])
+                pointinf = pointinf + tuple([np.nan])
+            else:
+                pointsup = pointsup + tuple([tupper])
+                if (tlower<1):
+                    pointinf = pointinf + tuple([np.nan])#tuple([1])
+                else:
+                    pointinf = pointinf + tuple([tlower])
+        elif dis==0:
+            tupper = beta/( Gphi/t + (1-Gphi)*t )
+            if (tupper<1):
+                pointsup = pointsup + tuple([np.nan])
+                pointinf = pointinf + tuple([np.nan])
+            else:
+                pointsup = pointsup + tuple([tupper])
+                pointinf = pointinf + tuple([tupper])
+        elif dis<0:
+            pointsup = pointsup + tuple([np.nan])
+            pointinf = pointinf + tuple([np.nan])
+        
+    phivect = tuple(phivect)
+    tiltvect = pointsup + pointinf[::-1]
+    phivect = phivect + phivect[::-1]
+    t_list, phi_list = [], []
+    for i in range(len(tiltvect)):
+        t, phi = tiltvect[i], phivect[i]
+        if not np.isnan(t):
+            t_list.append(t)
+            phi_list.append(phi)
+            if t==1.0:
+                print(i)    
+    return np.array(t_list), np.array(phi_list)
+
+def DepictDisk(decomp_list,*args, surcolor='lightsteelblue', tilt_radius=np.log(1.7), **kwargs):
+    green = tuple([51/255, 150/255, 0])
+    red = tuple([204/255, 0, 51/255])
+    for d in decomp_list:
+        t_list, phi_list = get_disk_edges(d[2],d[3], tiltradius=tilt_radius)
+        div_point, div_step = np.nan, np.abs(phi_list[1]-phi_list[0])
+        for i in range(len(phi_list)-1):
+            if np.abs(phi_list[i+1]-phi_list[i])>div_step:
+                # print(phi_list[i+1],phi_list[i])
+                div_point=i
+                break
+                                            
+        if not np.isnan(div_point) and phi_list[0]==0 and phi_list[int(len(phi_list)/2-1)]==np.pi:
+            phit_list, tt_list = tuple(phi_list[phi_list<np.pi/2]), tuple(t_list[phi_list<np.pi/2])
+            phit_list = phit_list + tuple([phit_list[0]])
+            tt_list = tt_list + tuple([tt_list[0]])
+            plt.plot(np.log(tt_list)*np.cos(phit_list),np.log(tt_list)*np.sin(phit_list),'-', color=red,linewidth=0.5)        
+            plt.fill(np.log(tt_list)*np.cos(phit_list),np.log(tt_list)*np.sin(phit_list),facecolor=surcolor, edgecolor='none',alpha=0.2)
+
+            phit_list, tt_list = tuple(phi_list[phi_list>np.pi/2]), tuple(t_list[phi_list>np.pi/2])
+            phit_list = phit_list + tuple([phit_list[0]])
+            tt_list = tt_list + tuple([tt_list[0]])
+            plt.plot(np.log(tt_list)*np.cos(phit_list),np.log(tt_list)*np.sin(phit_list),'-', color=red,linewidth=0.5)
+            plt.fill(np.log(tt_list)*np.cos(phit_list),np.log(tt_list)*np.sin(phit_list),facecolor=surcolor, edgecolor='none',alpha=0.2)        
+            plt.plot(np.log(d[2])*np.cos(d[3]),np.log(d[2])*np.sin(d[3]),'.', color=green)
+        elif len(t_list)>0:            
+            t_list = tuple(t_list) + tuple([t_list[0]])
+            phi_list = tuple(phi_list) + tuple([phi_list[0]])
+            plt.plot(np.log(t_list)*np.cos(phi_list),np.log(t_list)*np.sin(phi_list),'-', color=red,linewidth=0.5)            
+            plt.fill(np.log(t_list)*np.cos(phi_list),np.log(t_list)*np.sin(phi_list),facecolor=surcolor, edgecolor='none',alpha=0.2)
+            plt.plot(np.log(d[2])*np.cos(d[3]),np.log(d[2])*np.sin(d[3]),'.', color=green)    
+
 
 class ClassSIFTparams():
     def __init__(self, nfeatures = 0, nOctaveLayers = 3, contrastThreshold = 0.04, edgeThreshold = 10, sigma = 1.6, firstOctave = -1, sift_init_sigma = 0.5, graydesc = True):

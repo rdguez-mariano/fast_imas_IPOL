@@ -1,0 +1,138 @@
+{
+    "archive": {
+        "enable_reconstruct": true,
+        "files": {
+            "input_0.png"          : "Query image",
+            "input_1.png"           : "Target image",
+            "IMASmatches.png"        : "Matches",
+            "simusquery.png"        : "simusquery",
+            "simustarget.png"        : "simustarget",
+            "stdout.txt": "Output_details"
+    },
+    "params": [
+      "gfilter",
+"covering",
+"type",
+"detector",
+"descriptor",
+"dilate"
+    ]
+    },
+  "build": {
+    "build1": {
+      "url": "http://dev.ipol.im/~rdguez-mariano/fixed_files/adimas.tar.gz",
+      "construct": "cd fast_imas_IPOL/adaptiveIMAS && bash setup.sh && chmod +x IPOLcaller/adimas_caller.py",
+      "move": "fast_imas_IPOL/adaptiveIMAS/imas_bin, fast_imas_IPOL/adaptiveIMAS/hesaffnet, fast_imas_IPOL/adaptiveIMAS/libLocalDesc.py, fast_imas_IPOL/adaptiveIMAS/library.py, fast_imas_IPOL/adaptiveIMAS/IPOLcaller/adimas_caller.py, fast_imas_IPOL/adaptiveIMAS/IPOLcaller/run.sh",
+      "virtualenv": "fast_imas_IPOL/adaptiveIMAS/requirements.txt"
+    }
+  },
+  "general": {
+    "timeout": 300,
+    "demo_title": "Adaptive IMAS",
+    "input_description": [
+      ""
+    ],
+    "param_description": [
+      ""
+    ],
+    "requirements": "DR1",
+    "xlink_article": ""
+  },
+  "inputs": [
+        {
+            "description": "Query image",
+            "dtype": "3x8i",
+            "ext": ".png",
+            "max_pixels": "1000 * 1000",
+            "max_weight": "1024*1024*10",
+            "required": true,
+            "type": "image"
+        },
+        {
+            "description": "Target image",
+            "dtype": "3x8i",
+            "ext": ".png",
+            "max_pixels": "1000 * 1000",
+            "max_weight": "1024*1024*10",
+            "required": false,
+            "type": "image"
+        }
+  ],
+  "params": [
+        {
+            "id": "descriptor",
+            "label": "<center> Descriptor </center>",
+            "type": "selection_radio",
+            "values": {
+                "RootSIFT</br>":"11",
+                "SIFT</br>": "1",
+                "SURF</br>": "2"
+            },
+            "default_value": "11",
+            "vertical": true
+        },
+        {
+            "id": "detector",
+            "label": "<center> Detector </center>",
+            "type": "selection_radio",
+            "values": {
+                "HessAff</br>":"HessAff",
+                "SIFT</br>": "SIFT"
+            },
+            "default_value": "HessAff",
+            "vertical": true
+        },
+        {
+            "id": "type",
+            "label": "<center> Adaptive type </center>",
+            "type": "selection_radio",
+            "values": {
+                "Fixed tilts</br>":"FixedTilts",
+                "Greedy</br>": "Greedy"
+            },
+            "default_value": "FixedTilts",
+            "vertical": true
+        },
+        {
+            "id": "covering",
+            "label": "<center> Coverings </center>",
+            "type": "selection_radio",
+            "values": {
+                "Optimal for 56 degrees</br>":"1.7",
+                "Optimal for 45 degrees</br>": "1.4"
+            },
+            "default_value": "1.7",
+            "vertical": true
+        },
+        {
+            "id": "gfilter",
+            "label": "<center> Geometric Filter </center>",
+            "type": "selection_radio",
+            "values": {
+                "ORSA Homography </br>":"2",
+                "ORSA Fundamental</br>": "1",
+                "USAC Homography</br>": "4",
+                "USAC Fundamental</br>": "3"
+            },
+            "default_value": "4",
+            "vertical": true
+        }
+  ],
+  "results": [
+        {
+            "contents": {
+                "Matches": {"img": "IMASmatches.png"},
+                "Simulations on Query": {"img": "simusquery.png"},
+                "Simulations on Target": {"img": "simustarget.png"}
+            },
+            "label": "",
+            "type": "gallery"
+        },
+        {
+            "contents": "stdout.txt", 
+            "label": "<br/><b>Program Output:</b><br/>", 
+            "type": "text_file"
+        }
+  ],
+  "run":  "${bin}/run.sh ${virtualenv} ${demoextras} ${bin} $gfilter $covering $type $detector $descriptor"
+}
