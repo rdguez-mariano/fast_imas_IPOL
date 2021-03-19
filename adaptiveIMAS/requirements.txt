@@ -5,7 +5,7 @@ opencv-python==3.4.2.17
 opencv-contrib-python==3.4.2.17
 torch==1.0.1.post2
 torchvision==0.2.1
-Pillow==6.2.0
+Pillow==8.1.1
 tqdm==4.48.2
 scipy==1.4.1
 pandas==0.25.3
