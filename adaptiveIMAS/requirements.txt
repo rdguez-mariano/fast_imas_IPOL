@@ -1,5 +1,5 @@
 matplotlib==3.2.1
-numpy==1.14.5
+numpy==1.22.0
 psutil==5.7.0
 opencv-python==3.4.2.17
 opencv-contrib-python==3.4.2.17
